@@ -76,9 +76,23 @@ function MetricInputForm({ metricDef, onMetricChange, onCoordChange, onSubmit, o
                     </div>
                 ))}
             </div>
-            <div className="form-actions">
-                 <button type="submit" className="submit-button">Calculate Geometry</button>
-                 <button type="button" onClick={handleReset} className="reset-button">Reset to Schwarzschild</button>
+            {/* Group action buttons */} 
+            <div className="button-group">
+                <button 
+                    type="submit" 
+                    disabled={!isFormValid || hasEmptyCoords} // Check validity
+                    className="primary-button" // Apply primary style
+                    title={!isFormValid ? "Enter valid SymPy expressions for all components" : hasEmptyCoords ? "Enter non-empty coordinate symbols" : "Calculate geometric tensors"}
+                >
+                    Calculate Geometry
+                </button>
+                <button 
+                    type="button" 
+                    onClick={onReset} 
+                    className="danger-button" // Apply danger style
+                >
+                    Reset Metric
+                </button>
             </div>
         </form>
     );

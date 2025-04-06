@@ -169,8 +169,8 @@ function StressEnergyInputForm({ stressEnergyDef, onStateChange, onSubmit }) {
                 </div>
             )}
 
-            <div className="form-actions">
-                 <button type="submit" className="submit-button">Calculate T<sub>&mu;&nu;</sub></button>
+            <div className="button-group">
+                 <button type="submit" className="primary-button">Calculate <InlineMath math="T_{\mu\nu}" /></button>
             </div>
         </form>
     );

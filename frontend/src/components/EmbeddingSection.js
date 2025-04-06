@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import Plot from 'react-plotly.js';
 import { InlineMath } from 'react-katex';
+import './EmbeddingSection.css'; // Import the CSS file
 
 const API_BASE_URL = '/api';
 
@@ -172,14 +173,17 @@ function EmbeddingSection({ metricDef, currentGeodesicParams, onShowDefinition }
                     </div>
                 </div>
                 <div className="action-button-container">
-                    <button onClick={handleCalculateEmbedding} disabled={embeddingLoading || !metricDef} className="secondary-action-button">
+                    <button 
+                        onClick={handleCalculateEmbedding} 
+                        disabled={embeddingLoading || !metricDef} 
+                        className="secondary-button"
+                    >
                         Calculate Flamm's Paraboloid
                     </button>
                     {embeddingLoading && <span className="inline-loader"> Loading...</span>}
                 </div>
             </div>
 
-            {embeddingError && <div className="error-message">{embeddingError}</div>}
             {embeddingResult && !embeddingLoading && !embeddingError && (
                 <div className="embedding-result-container results-container">
                     <h5>

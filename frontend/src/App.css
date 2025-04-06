@@ -239,4 +239,363 @@
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); /* Adjust minmax as needed */
     gap: 20px;
     align-items: start; /* Align plots at the top */
+}
+
+/* --- General Content Sections --- */
+.content-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.content-section h4 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+/* For subsections within a content-section */
+.subsection {
+  margin-top: 25px;
+  padding-top: 15px;
+  padding-left: 15px;
+  border-left: 3px solid #007bff; /* Accent border */
+  background-color: #fdfdfd;
+}
+
+.subsection h5 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #444;
+}
+
+
+/* --- Specific Section Styling --- */
+.metric-section .metric-grid {
+  margin-bottom: 15px; /* Space between grid and buttons */
+}
+
+.results-container {
+  margin-top: 20px;
+}
+
+.results-container h3, 
+.results-container h5 {
+  margin-bottom: 15px;
+}
+
+/* Tmunu results adjustments if needed */
+.tmunu-results .geometry-results-display {
+  /* Add specific styles if needed */
+}
+
+/* EFE Verification specific styles */
+.verification-section {
+  /* Existing styles moved to .subsection */
+}
+
+.verification-result {
+  margin-top: 15px;
+  padding: 10px 15px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.verified-true {
+  background-color: #d4edda; /* Bootstrap success light green */
+  color: #155724; /* Bootstrap success dark green */
+  border: 1px solid #c3e6cb;
+}
+
+.verified-false {
+  background-color: #f8d7da; /* Bootstrap danger light red */
+  color: #721c24; /* Bootstrap danger dark red */
+  border: 1px solid #f5c6cb;
+}
+
+.verify-button {
+  /* Styles will be applied via general button styles */
+}
+
+/* Definition Link Styles */
+.definition-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: #0056b3; /* Link color */
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.definition-link:hover {
+  color: #003d80;
+}
+
+.definition-link-inline {
+    background: none;
+    border: none;
+    padding: 0 5px;
+    margin-left: 5px;
+    font-size: 0.9em;
+    color: #0056b3;
+    cursor: pointer;
+    text-decoration: none; /* No underline for inline */
+    border: 1px solid #ccc;
+    border-radius: 50%; /* Make it circular */
+    line-height: 1; /* Adjust for better vertical alignment */
+    display: inline-flex; /* Use flex for centering */
+    align-items: center;
+    justify-content: center;
+    width: 18px; /* Fixed size */
+    height: 18px;
+}
+
+.definition-link-inline:hover {
+    background-color: #eee;
+    color: #003d80;
+}
+
+/* --- Plotting --- */
+.plot-container {
+  width: 100%;
+}
+
+.plot-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; /* Space between plots */
+    margin-top: 15px;
+}
+
+.plot-wrapper {
+    flex: 1 1 45%; /* Allow plots to grow, basis of ~45% for two-column feel */
+    min-width: 300px; /* Minimum width before wrapping */
+    /* Optional: Add border or background */
+    /* border: 1px solid #ddd; */
+    /* padding: 10px; */
+    /* border-radius: 4px; */
+    background-color: #fdfdfd; /* Slightly off-white bg */
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.plot-wrapper h6 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #555;
+    font-weight: normal;
+}
+
+/* --- Loading and Error States --- */
+.loading-indicator {
+  font-style: italic;
+  color: #555;
+  margin-top: 15px;
+  text-align: center;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.error-message {
+  color: #dc3545; /* Bootstrap danger color */
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+/* --- Definition Popup --- */
+.definition-popup-overlay {
+    position: fixed; 
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6); 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; 
+}
+
+.definition-popup {
+    background: white;
+    padding: 25px 30px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh; /* Limit height */
+    overflow-y: auto; /* Allow scrolling */
+    position: relative;
+}
+
+.definition-popup h3 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.definition-popup p {
+    line-height: 1.6;
+    color: #555;
+}
+
+.definition-popup .katex-display {
+    margin: 1em 0; /* Add space around block math */
+    overflow-x: auto; /* Allow horizontal scrolling for wide equations */
+    padding-bottom: 5px; /* Space for scrollbar */
+}
+
+.definition-popup-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    padding: 5px;
+    line-height: 1;
+}
+
+.definition-popup-close:hover {
+    color: #333;
+}
+
+/* --- Button Styles --- */
+button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  margin: 5px; /* Add some base margin */
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Primary Button Style */
+.primary-button {
+  background-color: #007bff; /* Bootstrap primary blue */
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.primary-button:hover:not(:disabled) {
+  background-color: #0056b3;
+  box-shadow: 0 3px 6px rgba(0, 86, 179, 0.4);
+}
+
+/* Secondary Button Style */
+.secondary-button {
+  background-color: #6c757d; /* Bootstrap secondary gray */
+  color: white;
+  box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);
+}
+
+.secondary-button:hover:not(:disabled) {
+  background-color: #545b62;
+  box-shadow: 0 3px 6px rgba(84, 91, 98, 0.4);
+}
+
+/* Danger/Reset Button Style */
+.danger-button {
+  background-color: #dc3545; /* Bootstrap danger red */
+  color: white;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.danger-button:hover:not(:disabled) {
+  background-color: #b02a37;
+  box-shadow: 0 3px 6px rgba(176, 42, 55, 0.4);
+}
+
+/* Specific button overrides if needed */
+.metric-form .button-group button {
+  /* Example: Slightly smaller buttons in metric form */
+  /* padding: 8px 15px; */
+  /* font-size: 0.95rem; */
+}
+
+.scenario-manager button {
+  /* Example: Adjust margin if needed */
+  /* margin: 5px 3px; */
+}
+
+/* --- Toast Styling (Optional Override) --- */
+.Toastify__toast--success {
+  background-color: #28a745 !important; /* Bootstrap success green */
+}
+
+.Toastify__toast--error {
+  background-color: #dc3545 !important; /* Bootstrap danger red */
+}
+
+.Toastify__toast--warning {
+  background-color: #ffc107 !important; /* Bootstrap warning yellow */
+  color: #333 !important; /* Ensure text is readable */
+}
+
+.Toastify__toast--info {
+  background-color: #17a2b8 !important; /* Bootstrap info cyan */
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+  .App-header {
+    padding: 15px;
+  }
+  .App-header h1 {
+    font-size: 1.8rem;
+  }
+  .App-content {
+    padding: 15px;
+  }
+  .content-section {
+    padding: 15px;
+  }
+  .metric-grid {
+    grid-template-columns: repeat(4, 1fr); /* Keep 4 columns on smaller screens if possible */
+    gap: 5px;
+  }
+  .metric-grid input {
+    padding: 5px;
+    font-size: 0.9rem;
+  }
+
+  button {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+
+  .plot-wrapper {
+    flex-basis: 100%; /* Stack plots on small screens */
+  }
+
+  .definition-popup {
+    width: 95%;
+    padding: 20px;
+  }
 } 

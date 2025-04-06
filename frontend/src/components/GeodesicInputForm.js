@@ -190,8 +190,17 @@ function GeodesicInputForm({ onSubmit, onError, currentCoords = ["t", "r", "thet
                 </button>
             </div>
 
-            <div className="form-actions">
-                <button type="submit" className="submit-button">Calculate Geodesic</button>
+            <div className="button-group">
+                <button 
+                    type="submit" 
+                    disabled={!isFormValid}
+                    className="primary-button"
+                    title={!isFormValid ? "Fill in all required fields correctly." : "Calculate geodesic path"}
+                >
+                    Calculate Geodesic
+                </button>
+                 {/* Optionally add a reset button here */}
+                 {/* <button type="button" onClick={handleReset} className="secondary-button">Reset Fields</button> */}
             </div>
         </form>
     );

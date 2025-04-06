@@ -140,11 +140,11 @@ function GeodesicSection({ metricDef, onShowDefinition }) { // Receive metricDef
 
     return (
         <div className="geodesic-section">
-            <h5>
+            <h4>
                 <button className="definition-link" onClick={() => onShowDefinition('geodesic_equation')}>
                     Geodesic Calculation
                 </button>
-            </h5>
+            </h4>
             <GeodesicInputForm
                 onSubmit={handleCalculateGeodesic}
                 onError={handleFormError} // Pass the handler for form errors
@@ -154,8 +154,8 @@ function GeodesicSection({ metricDef, onShowDefinition }) { // Receive metricDef
             {formError && <div className="error-message">{formError}</div>}
             
             {geodesicLoading && <div className="loading-indicator">Calculating Geodesic...</div>}
-            {/* Only show API error if there's no form error */} 
-            {geodesicError && !formError && <div className="error-message">{geodesicError}</div>}
+            {/* Remove API error display - handled by toast */}
+            {/* {geodesicError && !formError && <div className="error-message">{geodesicError}</div>} */}
 
             {geodesicResults && !geodesicLoading && !geodesicError && !formError && (
                 <div className="plot-container results-container">

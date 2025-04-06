@@ -77,4 +77,80 @@
     color: #27ae60; /* Green */
     font-size: 0.9em;
     margin: 5px 0;
+}
+
+/* Styles for ScenarioManager.js */
+
+.scenario-manager {
+  /* Inherits .content-section styles */
+  background-color: #f8f9fa; /* Slightly different background */
+}
+
+.scenario-manager h4 {
+  /* Inherits .content-section h4 styles */
+  color: #495057; /* Darker gray for title */
+}
+
+.scenario-controls {
+  display: flex;
+  flex-wrap: wrap; /* Allow groups to wrap on smaller screens */
+  gap: 20px; /* Space between load and save groups */
+  margin-top: 15px;
+}
+
+.scenario-group {
+  flex: 1; /* Allow groups to share space */
+  min-width: 250px; /* Minimum width before wrapping */
+  display: flex;
+  align-items: center; /* Align items vertically */
+  gap: 10px; /* Space between elements within a group */
+  padding: 15px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background-color: #fff;
+}
+
+.scenario-group label {
+  font-weight: bold;
+  white-space: nowrap;
+  color: #495057;
+}
+
+.scenario-group select,
+.scenario-group input[type="text"] {
+  padding: 8px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  flex-grow: 1; /* Allow input/select to take available space */
+}
+
+.scenario-group button {
+  flex-shrink: 0; /* Prevent buttons from shrinking */
+}
+
+/* Smaller variant for delete button */
+.danger-button-small {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+}
+
+/* Adjustments for loading/error/success messages */
+.scenario-manager .error-message {
+  margin-bottom: 15px; /* Space below error */
+}
+
+.scenario-manager .loading-indicator.small-loader {
+  text-align: left;
+  padding: 5px 0;
+  font-size: 0.9em;
+  background-color: transparent;
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+
+.save-group .success-message {
+  font-size: 0.9em;
+  color: #28a745; /* Success green */
+  font-style: italic;
+  margin-left: 10px;
 } 

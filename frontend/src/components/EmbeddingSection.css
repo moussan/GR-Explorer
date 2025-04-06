@@ -1,0 +1,75 @@
+/* Styles for EmbeddingSection.js */
+
+.embedding-section {
+    /* Add margin if needed */
+    /* margin-bottom: 20px; */
+}
+
+.embedding-controls-section {
+    background-color: #f9f9f9; /* Light background for controls area */
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.embedding-controls-section h5 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+}
+
+.embedding-params-inputs {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 15px; /* Spacing between input groups */
+    margin-bottom: 15px;
+}
+
+.input-group-inline {
+    display: flex;
+    align-items: center; /* Align label and input vertically */
+    gap: 5px; /* Space between label and input */
+}
+
+.input-group-inline label {
+    white-space: nowrap; /* Prevent label text from wrapping */
+}
+
+.input-group-inline input[type="text"],
+.input-group-inline input[type="number"] {
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    max-width: 100px; /* Adjust width as needed */
+}
+
+.action-button-container {
+    display: flex;
+    align-items: center; /* Align button and loader */
+    gap: 10px;
+}
+
+.inline-loader {
+    font-style: italic;
+    color: #555;
+}
+
+.embedding-result-container {
+    /* Styles for the results area if needed */
+}
+
+.plot-grid {
+    display: flex; /* Use flex for side-by-side plots */
+    flex-wrap: wrap; /* Allow plots to stack on smaller screens */
+    gap: 20px;
+}
+
+.plot-wrapper {
+    flex: 1; /* Allow plots to share space */
+    min-width: 300px; /* Minimum width before wrapping */
+    /* Optional: add border or background to plot wrappers */
+    /* border: 1px solid #eee; */
+    /* padding: 10px; */
+} 

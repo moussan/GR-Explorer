@@ -547,49 +547,56 @@ function App() {
       <hr className="section-divider" />
 
       <main className="App-content">
-        {/* Metric Input - Now Controlled */} 
-        <MetricInputForm 
-            metricDef={metricDef} 
-            onMetricChange={handleMetricComponentChange}
-            onCoordChange={handleMetricCoordChange}
-            onSubmit={handleCalculateGeometry} 
-            onReset={handleMetricReset}
-        />
-        {geometryLoading && <div className="loading-indicator">Calculating Geometry...</div>}
-        {geometryError && <div className="error-message">{geometryError}</div>}
+        {/* --- Metric Section --- */}
+        <section className="content-section metric-section">
+            {/* Use h4 for section title */} 
+            <h4>Metric Definition (<InlineMath math="g_{\mu\nu}" />)</h4>
+            <MetricInputForm 
+                metricDef={metricDef} 
+                onMetricChange={handleMetricComponentChange}
+                onCoordChange={handleMetricCoordChange}
+                onSubmit={handleCalculateGeometry} 
+                onReset={handleMetricReset}
+            />
+            {geometryLoading && <div className="loading-indicator">Calculating Geometry...</div>}
+        </section>
         
-        {/* Geometry Results Display */} 
+        {/* --- Geometry Results & Embedding Section --- */} 
         {geometryResults && !geometryLoading && !geometryError && (
-            <div className="results-container">
-                 <GeometryResultsDisplay 
-                    results={geometryResults} 
-                    onShowDefinition={handleShowDefinition} // Pass handler
-                /> 
-                 {/* EmbeddingSection now handles its own display */} 
-                 <EmbeddingSection 
-                    metricDef={metricDef}
-                    currentGeodesicParams={currentGeodesicParams} // Pass params needed for embedding
-                    onShowDefinition={handleShowDefinition}
-                 />
-            </div>
+            <section className="content-section results-section">
+                 {/* Title now inside GeometryResultsDisplay */} 
+                 {/* <h4>Geometry Results</h4> */} 
+                <div className="results-container">
+                    <GeometryResultsDisplay 
+                        results={geometryResults} 
+                        onShowDefinition={handleShowDefinition}
+                    /> 
+                    <EmbeddingSection 
+                        metricDef={metricDef}
+                        currentGeodesicParams={currentGeodesicParams} 
+                        onShowDefinition={handleShowDefinition}
+                    />
+                </div>
+            </section>
         )}
 
         <hr className="section-divider" />
 
-        {/* Stress-Energy Input - Now Controlled */} 
+        {/* --- Stress-Energy & EFE Section --- */} 
         {metricDef && (
-          <>
+          <section className="content-section stress-energy-section">
+             {/* Use h4 for section title */} 
+             <h4>Stress-Energy Tensor (<InlineMath math="T_{\mu\nu}" />) & EFE</h4>
             <StressEnergyInputForm 
                 stressEnergyDef={stressEnergyDef}
                 onStateChange={handleStressEnergyStateChange}
                 onSubmit={handleCalculateStressEnergy} 
             />
             {stressEnergyLoading && <div className="loading-indicator">Calculating Stress-Energy Tensor...</div>}
-            {stressEnergyError && <div className="error-message">{stressEnergyError}</div>}
             
             {stressEnergyResults && !stressEnergyLoading && !stressEnergyError && (
-                <div className="results-container">
-                    <h3>Calculated Stress-Energy Tensor (<InlineMath math="T_{\mu\nu}" />)</h3>
+                <div className="results-container tmunu-results">
+                    <h5>Calculated Stress-Energy Tensor</h5>
                     <GeometryResultsDisplay 
                         results={{ stress_energy_tensor: stressEnergyResults.stress_energy_tensor }} 
                         onShowDefinition={handleShowDefinition} 
@@ -597,40 +604,41 @@ function App() {
                 </div>
             )}
             
-            {/* EFE Verification */} 
-            <div className="verification-section">
+            {/* EFE Verification subsection */} 
+            <div className="subsection verification-section">
+                <h5>Einstein Field Equation Verification</h5>
                 <button 
                     onClick={handleVerifyEFE} 
                     disabled={!geometryResults || !stressEnergyResults || efeLoading}
-                    className="verify-button"
+                    className="secondary-button verify-button" // Apply button style later
                     title={(!geometryResults || !stressEnergyResults) ? "Calculate Geometry and Tmunu first" : "Verify Gmunu = kappa * Tmunu"}
                 >
                     Verify <InlineMath math="G_{\mu\nu} = \kappa T_{\mu\nu}"/> 
-                    <button className="definition-link-inline" onClick={(e) => { e.stopPropagation(); handleShowDefinition('efe'); }}> {/* Inline clickable definition */}
+                    <button className="definition-link-inline" onClick={(e) => { e.stopPropagation(); handleShowDefinition('efe'); }}> 
                          (?)
                     </button>
                 </button>
                 {efeLoading && <div className="loading-indicator">Verifying EFEs...</div>}
-                {efeError && <div className="error-message">{efeError}</div>}
                 {efeVerificationResult && !efeLoading && !efeError && (
                     <div className={`verification-result ${efeVerificationResult.verified ? 'verified-true' : 'verified-false'}`}>
-                        <strong>Verification Result:</strong> {efeVerificationResult.message}
+                        <strong>Result:</strong> {efeVerificationResult.message}
                     </div>
                 )}
             </div>
-          </>
+          </section>
         )}
 
          <hr className="section-divider" />
 
-         {/* Geodesic Section Component */} 
+         {/* --- Geodesic Section --- */} 
          {metricDef && (
-             <GeodesicSection 
-                metricDef={metricDef} 
-                onShowDefinition={handleShowDefinition}
-                // Pass setter for geodesic params if Embedding section needs it
-                // onParamsCalculated={setCurrentGeodesicParams} 
-             />
+             <section className="content-section geodesic-section-wrapper">
+                 {/* GeodesicSection component handles its own title */} 
+                 <GeodesicSection 
+                    metricDef={metricDef} 
+                    onShowDefinition={handleShowDefinition}
+                 />
+             </section>
          )}
 
       </main>

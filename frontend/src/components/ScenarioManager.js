@@ -102,45 +102,91 @@ function ScenarioManager({ currentMetricDef, currentStressEnergyInput, onLoadSce
             });
     };
 
-    return (
-        <div className="scenario-manager">
-            <h4>Scenario Management</h4>
-            {error && <p className="error-text">{error}</p>}
-            
-            <div className="scenario-section load-scenario">
-                <h5>Load Scenario</h5>
-                {isLoading && scenarioList.length === 0 && <p>Loading list...</p>}
-                <select 
-                    value={selectedScenario}
-                    onChange={(e) => setSelectedScenario(e.target.value)}
-                    disabled={isLoading}
-                >
-                    <option value="">-- Select a scenario --</option>
-                    {scenarioList.map(name => (
-                        <option key={name} value={name}>{name}</option>
-                    ))}
-                </select>
-                <button onClick={handleLoad} disabled={!selectedScenario || isLoading}>
-                    Load Selected
-                </button>
-            </div>
+    const handleDeleteClick = () => {
+        if (!selectedScenario) return;
 
-            <div className="scenario-section save-scenario">
-                <h5>Save Current Scenario As</h5>
-                <input 
-                    type="text"
-                    placeholder="New scenario name"
-                    value={newScenarioName}
-                    onChange={(e) => setNewScenarioName(e.target.value)}
-                    disabled={isLoading}
-                />
-                <button 
-                    onClick={handleSave} 
-                    disabled={!currentMetricDef || !currentStressEnergyInput || !newScenarioName || isLoading}
-                >
-                    Save Current
-                </button>
-                {saveMessage && <p className="success-text">{saveMessage}</p>}
+        // Optional: Add a confirmation dialog
+        if (!window.confirm(`Are you sure you want to delete the scenario "${selectedScenario}"?`)) {
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+        axios.delete(`${API_BASE_URL}/scenarios/${selectedScenario}`)
+            .then(response => {
+                const msg = response.data.message || `Scenario "${selectedScenario}" deleted successfully.`;
+                toast.success(msg);
+                setSelectedScenario(''); // Clear selection after delete
+                fetchScenarioList(); // Refresh the list
+            })
+            .catch(err => {
+                const msg = `Failed to delete scenario: ${err.response?.data?.detail || err.message}`;
+                console.error(`Error deleting scenario ${selectedScenario}:`, err);
+                setError(msg);
+                toast.error(msg);
+            })
+            .finally(() => {
+                setIsLoading(false);
+            });
+    };
+
+    return (
+        <div className="scenario-manager content-section">
+            <h4>Scenario Management</h4>
+            {error && <p className="error-message">{error}</p>}
+            {isLoading && <div className="loading-indicator small-loader">Updating scenarios...</div>}
+
+            <div className="scenario-controls">
+                <div className="scenario-group load-group">
+                    <label htmlFor="scenario-select">Load Scenario:</label>
+                    <select 
+                        id="scenario-select"
+                        value={selectedScenario}
+                        onChange={(e) => setSelectedScenario(e.target.value)}
+                        disabled={isLoading}
+                    >
+                        <option value="">-- Select --</option>
+                        {scenarioList.map(name => (
+                            <option key={name} value={name}>{name}</option>
+                        ))}
+                    </select>
+                    <button 
+                        onClick={handleLoad} 
+                        disabled={!selectedScenario || isLoading} 
+                        className="secondary-button" 
+                    >
+                        Load
+                    </button>
+                    <button 
+                        onClick={handleDeleteClick}
+                        disabled={!selectedScenario || isLoading} 
+                        className="danger-button danger-button-small"
+                        title="Delete selected scenario"
+                    >
+                        Delete
+                    </button>
+                </div>
+
+                <div className="scenario-group save-group">
+                    <label htmlFor="scenario-save-name">Save As:</label>
+                    <input 
+                        id="scenario-save-name"
+                        type="text"
+                        placeholder="New scenario name"
+                        value={newScenarioName}
+                        onChange={(e) => setNewScenarioName(e.target.value)}
+                        disabled={isLoading}
+                    />
+                    <button 
+                        onClick={handleSave} 
+                        disabled={!newScenarioName || !currentMetricDef || isLoading}
+                        className="primary-button"
+                        title={!currentMetricDef ? "Define a metric first" : "Save current inputs as scenario"}
+                    >
+                        Save
+                    </button>
+                    {saveMessage && <span className="success-message">{saveMessage}</span>}
+                </div>
             </div>
         </div>
     );
