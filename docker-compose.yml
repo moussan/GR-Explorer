@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000" # Expose backend API port
+    volumes:
+      - ./backend/app:/app/app # Mount backend code for development
+      - ./data:/app/data      # Mount data volume for persistence
+    environment:
+      # Add any necessary environment variables here
+      PYTHONUNBUFFERED: 1 # Recommended for Docker logging
+    container_name: gr_explorer_backend
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000" # Expose frontend dev server port
+    volumes:
+      - ./frontend/src:/app/src       # Mount frontend source for development
+      - ./frontend/public:/app/public # Mount public assets
+    depends_on:
+      - backend
+    container_name: gr_explorer_frontend
+    stdin_open: true # Keep container running for React dev server
+    tty: true        # Keep container running for React dev server
+
+volumes:
+  data: # Define the named volume (though we mount a local dir above) 

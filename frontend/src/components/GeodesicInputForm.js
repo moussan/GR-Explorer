@@ -1,0 +1,200 @@
+import React, { useState } from 'react';
+import './GeodesicInputForm.css'; // Create CSS file next
+
+// Default initial state example (corresponds to Schwarzschild radial infall from r=10)
+// Note: Proper initial velocity often depends on normalization with the *specific* metric.
+// This form provides the fields; calculation of correct u^mu might happen externally or need guidance.
+const defaultInitialPosition = ["0.0", "10.0", "1.570796", "0.0"]; // t, r, theta=pi/2, phi
+const defaultInitialVelocity = ["1.118", "0.0", "0.0", "0.0"]; // dt/dtau, dr/dtau, dtheta/dtau, dphi/dtau (example for M=1, r=10)
+const defaultTimeSpan = ["0.0", "50.0"];
+const defaultNumPoints = "200";
+const defaultParams = [{ name: 'M', value: '1.0' }];
+
+function GeodesicInputForm({ onSubmit, currentCoords = ["t", "r", "theta", "phi"] }) {
+    const [initialPosition, setInitialPosition] = useState(defaultInitialPosition);
+    const [initialVelocity, setInitialVelocity] = useState(defaultInitialVelocity);
+    const [timeSpan, setTimeSpan] = useState(defaultTimeSpan); // [tau_min, tau_max]
+    const [numPoints, setNumPoints] = useState(defaultNumPoints);
+    const [parameters, setParameters] = useState(defaultParams); // Array of {name: string, value: string}
+
+    const handleVectorChange = (event, index, setter) => {
+        const newValue = event.target.value;
+        setter(prev => prev.map((val, i) => (i === index ? newValue : val)));
+    };
+
+    const handleParamChange = (event, index, field) => {
+        const newValue = event.target.value;
+        setParameters(prev => 
+            prev.map((param, i) => (i === index ? { ...param, [field]: newValue } : param))
+        );
+    };
+
+    const addParameter = () => {
+        setParameters(prev => [...prev, { name: '', value: '' }]);
+    };
+
+    const removeParameter = (index) => {
+        setParameters(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleSubmit = (event) => {
+        event.preventDefault();
+
+        // Convert numeric fields from string to number, handle potential errors
+        try {
+            const pos = initialPosition.map(Number);
+            const vel = initialVelocity.map(Number);
+            const span = timeSpan.map(Number);
+            const points = parseInt(numPoints, 10);
+            const paramValues = parameters.reduce((acc, param) => {
+                if (param.name && param.value) { // Only include if both name and value are present
+                    acc[param.name] = parseFloat(param.value);
+                    if (isNaN(acc[param.name])) throw new Error(`Invalid number for parameter ${param.name}`);
+                }
+                return acc;
+            }, {});
+
+            if (isNaN(points) || points <= 1) {
+                throw new Error("Number of points must be an integer greater than 1.");
+            }
+            if (span.length !== 2 || isNaN(span[0]) || isNaN(span[1]) || span[0] >= span[1]) {
+                throw new Error("Invalid time span [τ_min, τ_max]. Ensure τ_min < τ_max.");
+            }
+            if (pos.some(isNaN) || vel.some(isNaN)) {
+                 throw new Error("Initial position and velocity must contain valid numbers.");
+            }
+
+            const payload = {
+                initial_position: pos,
+                initial_velocity: vel,
+                t_span: span,
+                num_points: points,
+                parameter_values: paramValues,
+                // Assumes the App component will add metric_components and coords
+            };
+            onSubmit(payload);
+
+        } catch (error) {
+            // TODO: Display this error message to the user
+            alert(`Input Error: ${error.message}`);
+            console.error("Input validation error:", error);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="geodesic-form">
+            <h3>Calculate Geodesic Path</h3>
+            
+            <div className="form-section">
+                <h4>Initial Position (x<sup>&mu;</sup> at &tau;=0)</h4>
+                <div className="vector-input">
+                    {initialPosition.map((val, index) => (
+                        <div key={index} className="input-group">
+                            <label htmlFor={`pos-${index}`}>{currentCoords[index]}:</label>
+                            <input 
+                                id={`pos-${index}`}
+                                type="text" 
+                                value={val}
+                                onChange={(e) => handleVectorChange(e, index, setInitialPosition)}
+                                required 
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="form-section">
+                <h4>Initial 4-Velocity (u<sup>&mu;</sup> = dx<sup>&mu;</sup>/d&tau; at &tau;=0)</h4>
+                 <p className="info-text">Note: Ensure velocity satisfies normalization (g<sub>&mu;&nu;</sub>u<sup>&mu;</sup>u<sup>&nu;</sup> = -1 for timelike, 0 for null) for the chosen metric.</p>
+                <div className="vector-input">
+                    {initialVelocity.map((val, index) => (
+                         <div key={index} className="input-group">
+                            <label htmlFor={`vel-${index}`}>d{currentCoords[index]}/d&tau;:</label>
+                            <input 
+                                id={`vel-${index}`}
+                                type="text" 
+                                value={val}
+                                onChange={(e) => handleVectorChange(e, index, setInitialVelocity)}
+                                required
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="form-section">
+                <h4>Integration Parameters</h4>
+                <div className="integration-params">
+                    <div className="input-group">
+                        <label htmlFor="tau-min">Min Affine Param. (&tau;<sub>min</sub>):</label>
+                        <input 
+                            id="tau-min"
+                            type="text" 
+                            value={timeSpan[0]}
+                            onChange={(e) => handleVectorChange(e, 0, setTimeSpan)}
+                            required
+                        />
+                    </div>
+                    <div className="input-group">
+                        <label htmlFor="tau-max">Max Affine Param. (&tau;<sub>max</sub>):</label>
+                        <input 
+                            id="tau-max"
+                            type="text" 
+                            value={timeSpan[1]}
+                            onChange={(e) => handleVectorChange(e, 1, setTimeSpan)}
+                            required
+                        />
+                    </div>
+                     <div className="input-group">
+                        <label htmlFor="num-points">Number of Points:</label>
+                        <input 
+                            id="num-points"
+                            type="number" 
+                            value={numPoints}
+                            onChange={(e) => setNumPoints(e.target.value)}
+                            min="2" 
+                            step="1"
+                            required
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div className="form-section">
+                <h4>Parameter Values (Numerical)</h4>
+                <p className="info-text">Provide numerical values for symbolic constants in the metric (e.g., M, a, Q).</p>
+                {parameters.map((param, index) => (
+                    <div key={index} className="parameter-entry">
+                        <input 
+                            type="text"
+                            placeholder="Symbol (e.g., M)"
+                            value={param.name}
+                            onChange={(e) => handleParamChange(e, index, 'name')}
+                            className="param-name-input"
+                        />
+                        <span className="param-equals">=</span>
+                        <input 
+                             type="text"
+                             placeholder="Value (e.g., 1.0)"
+                             value={param.value}
+                             onChange={(e) => handleParamChange(e, index, 'value')}
+                             className="param-value-input"
+                        />
+                        <button type="button" onClick={() => removeParameter(index)} className="remove-param-button">
+                            &times;
+                        </button>
+                    </div>
+                ))}
+                <button type="button" onClick={addParameter} className="add-param-button">
+                    + Add Parameter
+                </button>
+            </div>
+
+            <div className="form-actions">
+                <button type="submit" className="submit-button">Calculate Geodesic</button>
+            </div>
+        </form>
+    );
+}
+
+export default GeodesicInputForm; 

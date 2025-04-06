@@ -1,0 +1,173 @@
+.App-content {
+  padding: 20px;
+  max-width: 1200px; /* Allow wider content */
+  margin: 20px auto;
+}
+
+.loading-indicator {
+  text-align: center;
+  padding: 15px;
+  color: #555;
+  font-style: italic;
+}
+
+.error-message {
+  text-align: center;
+  padding: 15px;
+  background-color: #ffebee; /* Light red */
+  color: #c62828; /* Darker red */
+  border: 1px solid #ef9a9a;
+  border-radius: 5px;
+  margin: 15px 0;
+}
+
+.results-container {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    /* Inherits styles from GeometryResultsDisplay if nested */
+}
+
+.section-divider {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 40px 0;
+}
+
+.verification-section {
+    margin-top: 30px;
+    text-align: center;
+    padding: 20px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #fafafa;
+}
+
+.verify-button {
+    padding: 12px 25px;
+    font-size: 1.1em;
+    background-color: #ff9800; /* Orange */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.verify-button:hover:not(:disabled) {
+    background-color: #f57c00;
+}
+
+.verify-button:disabled {
+    background-color: #bdbdbd;
+    cursor: not-allowed;
+}
+
+.verification-result {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.verified-true {
+    background-color: #e8f5e9; /* Light green */
+    color: #2e7d32; /* Darker green */
+    border: 1px solid #a5d6a7;
+}
+
+.verified-false {
+    background-color: #ffebee; /* Light red */
+    color: #c62828; /* Darker red */
+    border: 1px solid #ef9a9a;
+}
+
+.geodesic-section {
+    /* Styles for the overall geodesic section container if needed */
+    margin-top: 20px;
+}
+
+.plot-container {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #fff; 
+}
+
+.plot-container h3 {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.plot-wrapper {
+    margin-bottom: 20px; /* Space between multiple plots */
+    width: 100%;
+}
+
+.plot-wrapper:last-child {
+    margin-bottom: 0;
+}
+
+/* Ensure Plotly graph div takes up space */
+.plot-container .js-plotly-plot .plotly,
+.plot-container .js-plotly-plot .plotly svg {
+    width: 100% !important; 
+    height: 100% !important;
+}
+
+/* Styles for Scenario Manager (if needed beyond component CSS) */
+.scenario-manager {
+  width: 80%; /* Example width */
+  margin: 20px auto; /* Center it */
+}
+
+/* Styles for Embedding Diagram section */
+.action-button-container {
+    margin-top: 15px;
+    text-align: center; 
+}
+
+.secondary-action-button {
+    padding: 8px 16px;
+    font-size: 0.9em;
+    background-color: #7f8c8d; /* Grayish */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.secondary-action-button:hover:not(:disabled) {
+    background-color: #6c7a7d;
+}
+
+.secondary-action-button:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+.inline-loader {
+    margin-left: 10px;
+    font-style: italic;
+    color: #555;
+}
+
+.embedding-result-container {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f8f9f9;
+    border-radius: 5px;
+    border: 1px solid #eee;
+}
+
+.embedding-result-container h5 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.embedding-result-container .katex-display {
+    margin: 0; /* Adjust margin if needed */
+} 

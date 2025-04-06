@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+
+sympy
+numpy
+scipy
+
+# For LaTeX conversion
+latex 

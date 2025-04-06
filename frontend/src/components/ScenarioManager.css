@@ -1,0 +1,80 @@
+.scenario-manager {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fdfdfd;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.scenario-manager h4 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #444;
+}
+
+.scenario-section {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px dashed #eee;
+}
+
+.scenario-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.scenario-section h5 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.load-scenario,
+.save-scenario {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+.scenario-manager select,
+.scenario-manager input[type="text"] {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex-grow: 1; /* Allow input/select to take available space */
+}
+
+.scenario-manager button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #5dade2; /* Light blue */
+    color: white;
+    transition: background-color 0.2s ease;
+}
+
+.scenario-manager button:hover:not(:disabled) {
+    background-color: #3498db;
+}
+
+.scenario-manager button:disabled {
+    background-color: #bdc3c7; /* Gray */
+    cursor: not-allowed;
+}
+
+.error-text {
+    color: #c0392b; /* Red */
+    font-size: 0.9em;
+    margin: 5px 0;
+}
+
+.success-text {
+    color: #27ae60; /* Green */
+    font-size: 0.9em;
+    margin: 5px 0;
+} 
