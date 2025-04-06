@@ -24,7 +24,8 @@ from .models import (
     GeodesicInput, GeodesicOutput,
     EFEVerificationRequest, EFEVerificationResponse,
     EmbeddingInput, EmbeddingOutput,
-    SaveScenarioInput, ScenarioListOutput, ScenarioLoadOutput
+    SaveScenarioInput, ScenarioListOutput, ScenarioLoadOutput,
+    DefinitionItem, DefinitionsOutput
 )
 
 router = APIRouter()
@@ -32,6 +33,16 @@ router = APIRouter()
 # Define the path for saving scenarios within the container
 SCENARIO_DIR = Path("/app/data/scenarios")
 SCENARIO_DIR.mkdir(parents=True, exist_ok=True) # Ensure directory exists
+
+# Load definitions once on startup
+DEFINITIONS_FILE = Path("/app/data/definitions.json")
+DEFINITIONS_DATA = {}
+if DEFINITIONS_FILE.exists():
+    try:
+        with open(DEFINITIONS_FILE, "r") as f:
+            DEFINITIONS_DATA = json.load(f)
+    except Exception as e:
+        print(f"Warning: Could not load definitions file {DEFINITIONS_FILE}: {e}")
 
 # Helper function to parse coordinate strings to SymPy symbols
 def parse_coords(coord_names: List[str]) -> List[Symbol]:
@@ -519,5 +530,32 @@ def load_scenario(scenario_name: str):
 # def delete_scenario(scenario_name: str):
 #     """Deletes a specific scenario."""
 #     # ... implementation ...
+
+# --- Educational Content Endpoint ---
+
+@router.get("/definitions", response_model=DefinitionsOutput, tags=["Educational"])
+def get_all_definitions():
+    """Retrieves all available educational definitions."""
+    if not DEFINITIONS_DATA:
+        raise HTTPException(status_code=404, detail="Definitions data not found or failed to load.")
+    # Validate loaded data against Pydantic model (optional but good practice)
+    try:
+        validated_data = {k: DefinitionItem(**v) for k, v in DEFINITIONS_DATA.items()}
+        return DefinitionsOutput(definitions=validated_data)
+    except Exception as e:
+        print(f"Error validating definitions data: {e}")
+        raise HTTPException(status_code=500, detail="Definitions data is invalid.")
+
+@router.get("/definitions/{item_key}", response_model=DefinitionItem, tags=["Educational"])
+def get_single_definition(item_key: str):
+    """Retrieves the definition for a specific item key."""
+    definition = DEFINITIONS_DATA.get(item_key.lower())
+    if not definition:
+        raise HTTPException(status_code=404, detail=f"Definition for '{item_key}' not found.")
+    try:
+        return DefinitionItem(**definition)
+    except Exception as e:
+         print(f"Error validating definition for {item_key}: {e}")
+         raise HTTPException(status_code=500, detail="Definition data is invalid.")
 
 # (End of file) 

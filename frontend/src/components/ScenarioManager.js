@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import './ScenarioManager.css';
 
 const API_BASE_URL = '/api'; // Assuming same base as App.js
@@ -26,8 +27,10 @@ function ScenarioManager({ currentMetricDef, currentStressEnergyInput, onLoadSce
             })
             .catch(err => {
                 console.error("Error fetching scenario list:", err);
-                setError("Could not load scenario list.");
-                setScenarioList([]); // Ensure list is empty on error
+                const msg = "Could not load scenario list.";
+                setError(msg);
+                toast.error(msg);
+                setScenarioList([]);
             })
             .finally(() => {
                 setIsLoading(false);
@@ -41,12 +44,13 @@ function ScenarioManager({ currentMetricDef, currentStressEnergyInput, onLoadSce
         axios.get(`${API_BASE_URL}/scenarios/${selectedScenario}`)
             .then(response => {
                 console.log("Loaded scenario:", response.data);
-                // Pass the loaded definition up to the App component
-                onLoadScenario(response.data.definition); 
+                onLoadScenario(response.data.definition);
             })
             .catch(err => {
+                const msg = `Failed to load scenario: ${err.response?.data?.detail || err.message}`;
                 console.error(`Error loading scenario ${selectedScenario}:`, err);
-                setError(`Failed to load scenario: ${err.response?.data?.detail || err.message}`);
+                setError(msg);
+                toast.error(msg);
             })
             .finally(() => {
                 setIsLoading(false);
@@ -54,12 +58,16 @@ function ScenarioManager({ currentMetricDef, currentStressEnergyInput, onLoadSce
     };
 
     const handleSave = () => {
+        let errorMsg = null;
         if (!newScenarioName) {
-            setError("Please enter a name for the new scenario.");
-            return;
+            errorMsg = "Please enter a name for the new scenario.";
+        } else if (!currentMetricDef || !currentStressEnergyInput) {
+            errorMsg = "Both Metric and Stress-Energy must be defined to save a scenario.";
         }
-        if (!currentMetricDef || !currentStressEnergyInput) {
-            setError("Both Metric and Stress-Energy must be defined to save a scenario.");
+        
+        if (errorMsg) {
+            setError(errorMsg);
+            toast.warn(errorMsg);
             return;
         }
 
@@ -77,13 +85,17 @@ function ScenarioManager({ currentMetricDef, currentStressEnergyInput, onLoadSce
 
         axios.post(`${API_BASE_URL}/scenarios`, payload)
             .then(response => {
-                setSaveMessage(response.data.message || "Scenario saved successfully!");
-                setNewScenarioName(''); // Clear input field
-                fetchScenarioList(); // Refresh the list
+                const msg = response.data.message || "Scenario saved successfully!";
+                setSaveMessage(msg);
+                toast.success(msg);
+                setNewScenarioName('');
+                fetchScenarioList();
             })
             .catch(err => {
+                const msg = `Failed to save scenario: ${err.response?.data?.detail || err.message}`;
                 console.error(`Error saving scenario ${newScenarioName}:`, err);
-                setError(`Failed to save scenario: ${err.response?.data?.detail || err.message}`);
+                setError(msg);
+                toast.error(msg);
             })
             .finally(() => {
                 setIsLoading(false);

@@ -1,19 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios'; // Import axios
 import './App.css'; // Optional: for component-specific styles
+import { ToastContainer, toast } from 'react-toastify'; // Import toast
+import 'react-toastify/dist/ReactToastify.css'; // Import CSS
 import MetricInputForm, { initialMetricState } from './components/MetricInputForm';
 // Import the results display component
 import GeometryResultsDisplay from './components/GeometryResultsDisplay'; 
 // Import the Stress-Energy form component
 import StressEnergyInputForm, { initialStressEnergyState } from './components/StressEnergyInputForm';
 // Import the Geodesic form component
-import GeodesicInputForm from './components/GeodesicInputForm';
+import GeodesicSection from './components/GeodesicSection';
 // Import plotting library
 import Plot from 'react-plotly.js'; // Use Plotly for plotting
 // Import KaTeX for rendering verification results
 import 'katex/dist/katex.min.css'; 
 import { InlineMath } from 'react-katex';
 import ScenarioManager from './components/ScenarioManager'; // Import ScenarioManager
+import DefinitionDisplay from './components/DefinitionDisplay'; // Import DefinitionDisplay
+import EmbeddingSection from './components/EmbeddingSection'; // Import new component
 
 // Base URL for the backend API 
 // Use the proxy defined in package.json for development, 
@@ -52,8 +56,17 @@ function App() {
   const [embeddingResult, setEmbeddingResult] = useState(null);
   const [embeddingLoading, setEmbeddingLoading] = useState(false);
   const [embeddingError, setEmbeddingError] = useState(null);
-  // Store params used for embedding calc if needed for plot titles etc.
   const [currentEmbeddingParams, setCurrentEmbeddingParams] = useState(null); 
+  // State for embedding numerical parameters
+  const [embeddingPlotParams, setEmbeddingPlotParams] = useState({
+      r_min: '', // Default to empty, backend will use dynamic default
+      r_max: '10.0',
+      num_points_r: '50',
+      num_points_phi: '60'
+  });
+
+  // State for definition popup
+  const [definitionKeyToShow, setDefinitionKeyToShow] = useState(null);
 
   // Fetch initial welcome message from backend
   useEffect(() => {
@@ -62,6 +75,7 @@ function App() {
         // Check if the root endpoint returns a message structure
         if (response.data && response.data.message) {
             setBackendMessage(response.data.message);
+            toast.info("Connected to backend."); // Optional: Initial connection toast
         } else {
             // Fallback if the root response is different
             setBackendMessage('Backend connected.'); 
@@ -69,8 +83,10 @@ function App() {
       })
       .catch(err => {
         console.error('Error fetching root data from backend:', err);
+        const errorMsg = 'Could not reach the backend server. Is it running?';
         setBackendMessage('Failed to connect to backend.');
-        setGeometryError('Could not reach the backend server. Is it running?'); // Use geometry error for initial connection issue
+        setGeometryError(errorMsg); 
+        toast.error(errorMsg); // Show error toast
       });
   }, []);
 
@@ -103,10 +119,8 @@ function App() {
       setStressEnergyError(null);
       setEfeVerificationResult(null);
       setEfeError(null);
-      setGeodesicResults(null);
-      setGeodesicError(null);
-      setEmbeddingResult(null);
-      setEmbeddingError(null);
+      // Clear geodesic params as they depend on metric parameters
+      setCurrentGeodesicParams(null);
   }, []);
 
   // Handler for StressEnergyInputForm state changes
@@ -128,6 +142,11 @@ function App() {
       });
   }, []);
 
+  // Handler for embedding plot parameter changes
+  const handleEmbeddingParamChange = useCallback((event) => {
+      const { name, value } = event.target;
+      setEmbeddingPlotParams(prev => ({ ...prev, [name]: value }));
+  }, []);
 
   // --- Calculation Handlers (using state directly) --- 
 
@@ -150,10 +169,12 @@ function App() {
     axios.post(`${API_BASE_URL}/calculate/geometry`, metricDef) // Send current metricDef state
       .then(response => {
         setGeometryResults(response.data);
+        toast.success("Geometry calculated successfully!");
       })
       .catch(err => {
         let errorMsg = err.response?.data?.detail || err.message || 'An error occurred during geometry calculation.';
         setGeometryError(`Geometry Error: ${errorMsg}`);
+        toast.error(`Geometry Error: ${errorMsg}`);
       })
       .finally(() => {
         setGeometryLoading(false);
@@ -180,11 +201,12 @@ function App() {
     axios.post(`${API_BASE_URL}/calculate/stress-energy`, payload)
       .then(response => {
         setStressEnergyResults(response.data);
-        // setCurrentStressEnergyInput(payload); // No longer need separate state for submitted input
+        toast.success("Stress-Energy tensor calculated!");
       })
       .catch(err => {
         let errorMsg = err.response?.data?.detail || err.message || 'An error occurred during T_munu calculation.';
         setStressEnergyError(`Stress-Energy Error: ${errorMsg}`);
+        toast.error(`Stress-Energy Error: ${errorMsg}`);
       })
       .finally(() => {
         setStressEnergyLoading(false);
@@ -210,10 +232,16 @@ function App() {
     axios.post(`${API_BASE_URL}/verify/efe`, verificationPayload)
       .then(response => {
           setEfeVerificationResult(response.data);
+          if (response.data.verified) {
+              toast.success("EFE Verification: Equations satisfied!");
+          } else {
+              toast.warn("EFE Verification: Equations NOT satisfied.");
+          }
       })
       .catch(err => {
           let errorMsg = err.response?.data?.detail || err.message || 'An error occurred during EFE verification.';
           setEfeError(`EFE Verification Error: ${errorMsg}`);
+          toast.error(`EFE Verification Error: ${errorMsg}`);
       })
       .finally(() => {
           setEfeLoading(false);
@@ -254,9 +282,6 @@ function App() {
         if (!metricDef) {
             setEmbeddingError("Metric must be defined to calculate embedding diagram."); return;
         }
-        // Get parameters from Geodesic form - needs update if params differ
-        // For now, assume relevant params (like M) are defined there
-        // A better approach might be a dedicated parameter input section
         const paramsForEmbedding = currentGeodesicParams || {}; 
         console.log("Calculating embedding diagram for:", metricDef, "with params:", paramsForEmbedding);
         setEmbeddingLoading(true);
@@ -264,18 +289,47 @@ function App() {
         setEmbeddingResult(null);
         setCurrentEmbeddingParams(null);
 
-        // TODO: Allow customizing r_min, r_max, num_points via UI?
-        // Using defaults from backend model for now.
+        // Convert numerical plot params from state, handle potential errors
+        let numParams = {};
+        try {
+            numParams.r_min = embeddingPlotParams.r_min ? parseFloat(embeddingPlotParams.r_min) : null; // Allow backend default
+            numParams.r_max = parseFloat(embeddingPlotParams.r_max);
+            numParams.num_points_r = parseInt(embeddingPlotParams.num_points_r, 10);
+            numParams.num_points_phi = parseInt(embeddingPlotParams.num_points_phi, 10);
+            
+            if (isNaN(numParams.r_max) || isNaN(numParams.num_points_r) || isNaN(numParams.num_points_phi)) {
+                throw new Error("r_max and num_points must be valid numbers.");
+            }
+            if (numParams.num_points_r <= 1 || numParams.num_points_phi <= 1) {
+                throw new Error("Number of points must be greater than 1.");
+            }
+            if (numParams.r_min !== null && isNaN(numParams.r_min)) {
+                 throw new Error("r_min must be a valid number if provided.");
+            }
+            if (numParams.r_min !== null && numParams.r_min >= numParams.r_max) {
+                throw new Error("r_min must be less than r_max.");
+            }
+
+        } catch (err) {
+            setEmbeddingError(`Invalid plot parameters: ${err.message}`);
+            setEmbeddingLoading(false);
+            return;
+        }
+
         const payload = {
              metric_input: metricDef, 
-             parameter_values: paramsForEmbedding 
-             // Add r_min, r_max etc. here if collected from UI
+             parameter_values: paramsForEmbedding, 
+             // Include numerical plot params
+             r_min: numParams.r_min,
+             r_max: numParams.r_max,
+             num_points_r: numParams.num_points_r,
+             num_points_phi: numParams.num_points_phi
         };
 
         axios.post(`${API_BASE_URL}/calculate/embedding/flamm`, payload)
             .then(response => {
                 setEmbeddingResult(response.data);
-                setCurrentEmbeddingParams(paramsForEmbedding); // Store params used
+                setCurrentEmbeddingParams(paramsForEmbedding); // Store metric params used
             })
             .catch(err => {
                 let errorMsg = err.response?.data?.detail || err.message || 'An error occurred during embedding calculation.';
@@ -305,11 +359,21 @@ function App() {
         setCurrentGeodesicParams(null);
         setEmbeddingResult(null);
         setEmbeddingError(null);
+        setDefinitionKeyToShow(null); // Close definition popup on load
         
         // Maybe automatically trigger geometry calculation after load?
         // handleCalculateGeometry(); // Uncomment to auto-calculate after load
-        
-   }, []); // Empty dependency array because it only uses setters
+        toast.success("Scenario loaded successfully!"); 
+   }, []);
+
+   // --- Definition Display Handler ---
+   const handleShowDefinition = useCallback((key) => {
+       setDefinitionKeyToShow(key);
+   }, []);
+
+   const handleCloseDefinition = useCallback(() => {
+       setDefinitionKeyToShow(null);
+   }, []);
 
   // Helper function to generate plot data (example for r vs t)
   const getRVSTPlotData = () => {
@@ -430,8 +494,45 @@ function App() {
      };
   };
 
+  // Add helpers for 2D Z vs R plot (optional)
+  const getEmbeddingZRData = () => {
+      if (!embeddingResult?.r_values || !embeddingResult?.z_values) return [];
+      return [{
+          x: embeddingResult.r_values,
+          y: embeddingResult.z_values,
+          type: 'scatter',
+          mode: 'lines',
+          name: 'z(r)',
+          marker: { color: 'purple' }
+      }];
+  };
+
+  const getEmbeddingZRLayout = () => {
+      const M = currentEmbeddingParams?.M;
+      const title = `Embedding Function z(r) ${M ? `(M=${M})` : ''}`;
+      return {
+          title: title,
+          xaxis: { title: 'Radial Coordinate (r)' },
+          yaxis: { title: 'Embedding Coordinate z' },
+          margin: { l: 50, r: 30, t: 50, b: 50 },
+          hovermode: 'closest'
+      };
+  };
+
   return (
     <div className="App">
+      <ToastContainer 
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
       <header className="App-header">
         <h1>GR Explorer</h1>
         <p>{backendMessage}</p>
@@ -460,35 +561,16 @@ function App() {
         {/* Geometry Results Display */} 
         {geometryResults && !geometryLoading && !geometryError && (
             <div className="results-container">
-                 <GeometryResultsDisplay results={geometryResults} /> 
-                 {/* Button to calculate embedding diagram */} 
-                 <div className="action-button-container">
-                     <button onClick={handleCalculateEmbedding} disabled={embeddingLoading || !metricDef} className="secondary-action-button">
-                         Calculate Flamm's Paraboloid
-                     </button>
-                     {embeddingLoading && <span className="inline-loader"> Loading...</span>}
-                 </div>
-                 {embeddingError && <div className="error-message">{embeddingError}</div>}
-                 {embeddingResult && !embeddingLoading && !embeddingError && (
-                     <div className="embedding-result-container results-container">
-                         <h5>Flamm's Paraboloid</h5>
-                         <p><i>Status: {embeddingResult.message}</i></p>
-                         {embeddingResult.z_function_latex && (
-                             <p><InlineMath math={`z(r) = ${embeddingResult.z_function_latex}`} /></p>
-                         )}
-                         {/* Embedding Plot */} 
-                         {embeddingResult.x_surface && 
-                            <div className="plot-wrapper">
-                                <Plot 
-                                    data={getEmbeddingSurfaceData()} 
-                                    layout={getEmbeddingSurfaceLayout()} 
-                                    useResizeHandler={true}
-                                    style={{ width: '100%', height: '500px' }}
-                                />
-                            </div>
-                         } 
-                     </div>
-                 )}
+                 <GeometryResultsDisplay 
+                    results={geometryResults} 
+                    onShowDefinition={handleShowDefinition} // Pass handler
+                /> 
+                 {/* EmbeddingSection now handles its own display */} 
+                 <EmbeddingSection 
+                    metricDef={metricDef}
+                    currentGeodesicParams={currentGeodesicParams} // Pass params needed for embedding
+                    onShowDefinition={handleShowDefinition}
+                 />
             </div>
         )}
 
@@ -508,7 +590,10 @@ function App() {
             {stressEnergyResults && !stressEnergyLoading && !stressEnergyError && (
                 <div className="results-container">
                     <h3>Calculated Stress-Energy Tensor (<InlineMath math="T_{\mu\nu}" />)</h3>
-                    <GeometryResultsDisplay results={{ stress_energy_tensor: stressEnergyResults.stress_energy_tensor }} />
+                    <GeometryResultsDisplay 
+                        results={{ stress_energy_tensor: stressEnergyResults.stress_energy_tensor }} 
+                        onShowDefinition={handleShowDefinition} 
+                    />
                 </div>
             )}
             
@@ -520,7 +605,10 @@ function App() {
                     className="verify-button"
                     title={(!geometryResults || !stressEnergyResults) ? "Calculate Geometry and Tmunu first" : "Verify Gmunu = kappa * Tmunu"}
                 >
-                    Verify Einstein Field Equations (G<sub>&mu;&nu;</sub> = T<sub>&mu;&nu;</sub>)
+                    Verify <InlineMath math="G_{\mu\nu} = \kappa T_{\mu\nu}"/> 
+                    <button className="definition-link-inline" onClick={(e) => { e.stopPropagation(); handleShowDefinition('efe'); }}> {/* Inline clickable definition */}
+                         (?)
+                    </button>
                 </button>
                 {efeLoading && <div className="loading-indicator">Verifying EFEs...</div>}
                 {efeError && <div className="error-message">{efeError}</div>}
@@ -535,32 +623,25 @@ function App() {
 
          <hr className="section-divider" />
 
-         {/* Geodesic Calculation Section */} 
+         {/* Geodesic Section Component */} 
          {metricDef && (
-            <div className="geodesic-section">
-                <GeodesicInputForm 
-                    onSubmit={handleCalculateGeodesic} 
-                    currentCoords={metricDef?.coords}
-                />
-                {geodesicLoading && <div className="loading-indicator">Calculating Geodesic...</div>}
-                {geodesicError && <div className="error-message">{geodesicError}</div>}
-
-                {/* Geodesic Plots */} 
-                {geodesicResults && !geodesicLoading && !geodesicError && (
-                    <div className="plot-container results-container">
-                        <h3>Geodesic Plots</h3>
-                        <div className="plot-wrapper">
-                            <Plot data={getRVSTPlotData()} layout={getRVSTPlotLayout()} useResizeHandler={true} style={{ width: '100%', height: '400px' }}/>
-                        </div>
-                        <div className="plot-wrapper">
-                            <Plot data={getXYPlotData()} layout={getXYPlotLayout()} useResizeHandler={true} style={{ width: '100%', height: '450px' }}/>
-                        </div>
-                    </div>
-                )}
-            </div>
+             <GeodesicSection 
+                metricDef={metricDef} 
+                onShowDefinition={handleShowDefinition}
+                // Pass setter for geodesic params if Embedding section needs it
+                // onParamsCalculated={setCurrentGeodesicParams} 
+             />
          )}
 
       </main>
+      
+      {/* Render Definition Popup Conditionally */} 
+      {definitionKeyToShow && (
+         <DefinitionDisplay 
+             itemKey={definitionKeyToShow} 
+             onClose={handleCloseDefinition} 
+         />
+      )}
     </div>
   );
 }

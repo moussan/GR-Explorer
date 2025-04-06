@@ -33,6 +33,7 @@ const renderTensorComponents = (components, tensorSymbol) => {
         <div className="tensor-components">
             {sortedKeys.map(key => (
                 <div key={key} className="tensor-component-item">
+                    {/* Use index prop in InlineMath if available for better keying */} 
                     <InlineMath math={`${tensorSymbol}${formatIndex(key)} = `} />
                     <BlockMath math={components[key]} /> 
                 </div>
@@ -41,10 +42,26 @@ const renderTensorComponents = (components, tensorSymbol) => {
     );
 };
 
-function GeometryResultsDisplay({ results }) {
+// Function to create a clickable title
+const ClickableTitle = ({ title, definitionKey, onShowDefinition }) => (
+    <button className="definition-link" onClick={() => onShowDefinition(definitionKey)}>
+        {title}
+    </button>
+);
+
+function GeometryResultsDisplay({ results, onShowDefinition }) {
     if (!results) {
         return null; // Don't render anything if there are no results
     }
+
+    // Helper to create title component
+    const InfoTitle = ({ title, definitionKey }) => (
+        <ClickableTitle 
+            title={title} 
+            definitionKey={definitionKey} 
+            onShowDefinition={onShowDefinition} 
+        />
+    );
 
     return (
         <div className="results-display">
@@ -52,28 +69,28 @@ function GeometryResultsDisplay({ results }) {
 
             {results.metric && (
                 <div className="result-section">
-                    <h3>Metric Tensor (<InlineMath math="g_{\mu\nu}" />)</h3>
+                    <h3><InfoTitle title={<>Metric Tensor (<InlineMath math="g_{\mu\nu}" />)</>} definitionKey="metric" /></h3>
                     {renderTensorComponents(results.metric.components_latex, 'g')}
                 </div>
             )}
 
             {results.inverse_metric && (
                 <div className="result-section">
-                    <h3>Inverse Metric Tensor (<InlineMath math="g^{\mu\nu}" />)</h3>
+                    <h3><InfoTitle title={<>Inverse Metric (<InlineMath math="g^{\mu\nu}" />)</>} definitionKey="inverse_metric" /></h3>
                     {renderTensorComponents(results.inverse_metric.components_latex, 'g')}
                 </div>
             )}
 
             {results.christoffel && (
                 <div className="result-section">
-                    <h3>Christoffel Symbols (<InlineMath math="\Gamma^{\lambda}_{\mu\nu}" />)</h3>
+                    <h3><InfoTitle title={<>Christoffel Symbols (<InlineMath math="\Gamma^{\lambda}_{\mu\nu}" />)</>} definitionKey="christoffel" /></h3>
                     {renderTensorComponents(results.christoffel.components_latex, '\Gamma')}
                 </div>
             )}
             
             {results.riemann && (
                  <div className="result-section">
-                    <h3>Riemann Tensor (<InlineMath math="R^{\rho}_{\sigma\mu\nu}" />)</h3>
+                    <h3><InfoTitle title={<>Riemann Tensor (<InlineMath math="R^{\rho}_{\sigma\mu\nu}" />)</>} definitionKey="riemann" /></h3>
                     {/* Note: Index formatting might need refinement for 4 indices */} 
                     {renderTensorComponents(results.riemann.components_latex, 'R')}
                 </div>
@@ -81,22 +98,30 @@ function GeometryResultsDisplay({ results }) {
 
             {results.ricci_tensor && (
                 <div className="result-section">
-                    <h3>Ricci Tensor (<InlineMath math="R_{\mu\nu}" />)</h3>
+                    <h3><InfoTitle title={<>Ricci Tensor (<InlineMath math="R_{\mu\nu}" />)</>} definitionKey="ricci_tensor" /></h3>
                     {renderTensorComponents(results.ricci_tensor.components_latex, 'R')}
                 </div>
             )}
 
             {results.ricci_scalar && (
                 <div className="result-section">
-                    <h3>Ricci Scalar (<InlineMath math="R" />)</h3>
+                    <h3><InfoTitle title={<>Ricci Scalar (<InlineMath math="R" />)</>} definitionKey="ricci_scalar" /></h3>
                     <BlockMath math={results.ricci_scalar.latex} />
                 </div>
             )}
 
             {results.einstein_tensor && (
                 <div className="result-section">
-                    <h3>Einstein Tensor (<InlineMath math="G_{\mu\nu}" />)</h3>
+                    <h3><InfoTitle title={<>Einstein Tensor (<InlineMath math="G_{\mu\nu}" />)</>} definitionKey="einstein_tensor" /></h3>
                     {renderTensorComponents(results.einstein_tensor.components_latex, 'G')}
+                </div>
+            )}
+            
+            {/* Added section for Stress-Energy if passed in */} 
+            {results.stress_energy_tensor && (
+                <div className="result-section">
+                    <h3><InfoTitle title={<>Stress-Energy Tensor (<InlineMath math="T_{\mu\nu}" />)</>} definitionKey="stress_energy_tensor" /></h3>
+                    {renderTensorComponents(results.stress_energy_tensor.components_latex, 'T')}
                 </div>
             )}
         </div>

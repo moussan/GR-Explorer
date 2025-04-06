@@ -10,7 +10,7 @@ const defaultTimeSpan = ["0.0", "50.0"];
 const defaultNumPoints = "200";
 const defaultParams = [{ name: 'M', value: '1.0' }];
 
-function GeodesicInputForm({ onSubmit, currentCoords = ["t", "r", "theta", "phi"] }) {
+function GeodesicInputForm({ onSubmit, onError, currentCoords = ["t", "r", "theta", "phi"] }) {
     const [initialPosition, setInitialPosition] = useState(defaultInitialPosition);
     const [initialVelocity, setInitialVelocity] = useState(defaultInitialVelocity);
     const [timeSpan, setTimeSpan] = useState(defaultTimeSpan); // [tau_min, tau_max]
@@ -39,6 +39,7 @@ function GeodesicInputForm({ onSubmit, currentCoords = ["t", "r", "theta", "phi"
 
     const handleSubmit = (event) => {
         event.preventDefault();
+        onError(null); // Clear previous form errors on submit
 
         // Convert numeric fields from string to number, handle potential errors
         try {
@@ -75,9 +76,8 @@ function GeodesicInputForm({ onSubmit, currentCoords = ["t", "r", "theta", "phi"
             onSubmit(payload);
 
         } catch (error) {
-            // TODO: Display this error message to the user
-            alert(`Input Error: ${error.message}`);
             console.error("Input validation error:", error);
+            onError(`Input Error: ${error.message}`); // Use onError prop
         }
     };
 

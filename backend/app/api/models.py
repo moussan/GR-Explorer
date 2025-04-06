@@ -198,6 +198,15 @@ class ScenarioLoadOutput(BaseModel):
     definition: ScenarioDefinition
 
 # ==============================================================================
-# Geodesic Calculation Models
+# Educational Content Models
 # ==============================================================================
+
+class DefinitionItem(BaseModel):
+    title: str
+    definition: str
+    formula: Optional[str] = None # Formula might not always apply
+
+class DefinitionsOutput(BaseModel):
+    definitions: Dict[str, DefinitionItem]
+
 # ... rest of models ... 

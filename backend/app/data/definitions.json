@@ -1,0 +1,57 @@
+{
+    "metric": {
+        "title": "Metric Tensor (g_{\mu\nu})",
+        "definition": "The metric tensor defines the geometry of spacetime. It allows calculation of distances, angles, and curvature. It relates coordinate intervals (dx^{\mu}) to the invariant spacetime interval (ds^2): ds^2 = g_{\mu\nu} dx^{\mu} dx^{\nu}.",
+        "formula": "g_{\mu\nu}"
+    },
+    "inverse_metric": {
+        "title": "Inverse Metric Tensor (g^{\mu\nu})",
+        "definition": "The inverse metric tensor is the matrix inverse of the metric tensor (g_{\mu\nu} g^{\nu\rho} = \delta^{\rho}_{\mu}). It is used for raising indices and calculating contractions.",
+        "formula": "g^{\mu\nu} = (g_{\mu\nu})^{-1}"
+    },
+    "christoffel": {
+        "title": "Christoffel Symbols (\Gamma^{\lambda}_{\mu\nu})",
+        "definition": "Christoffel symbols (of the second kind) represent the \"gravitational force field\" arising from the curvature of spacetime in a given coordinate system. They describe how basis vectors change from point to point and appear in the geodesic equation.",
+        "formula": "\Gamma^{\lambda}_{\mu\nu} = \frac{1}{2} g^{\lambda\rho} (\partial_{\mu} g_{\rho\nu} + \partial_{\nu} g_{\rho\mu} - \partial_{\rho} g_{\mu\nu})"
+    },
+    "riemann": {
+        "title": "Riemann Curvature Tensor (R^{\rho}_{\sigma\mu\nu})",
+        "definition": "The Riemann tensor measures the intrinsic curvature of spacetime. It describes the tidal forces experienced by nearby objects and quantifies how vectors change when parallel-transported around a closed loop.",
+        "formula": "R^{\rho}_{\sigma\mu\nu} = \partial_{\mu} \Gamma^{\rho}_{\nu\sigma} - \partial_{\nu} \Gamma^{\rho}_{\mu\sigma} + \Gamma^{\rho}_{\mu\lambda} \Gamma^{\lambda}_{\nu\sigma} - \Gamma^{\rho}_{\nu\lambda} \Gamma^{\lambda}_{\mu\sigma}"
+    },
+    "ricci_tensor": {
+        "title": "Ricci Tensor (R_{\mu\nu})",
+        "definition": "The Ricci tensor is a contraction of the Riemann tensor (R_{\mu\nu} = R^{\rho}_{\mu\rho\nu}). It measures how the volume of a small ball of matter changes over time due to curvature. It appears directly in the Einstein Field Equations.",
+        "formula": "R_{\mu\nu} = R^{\rho}_{\mu\rho\nu}"
+    },
+    "ricci_scalar": {
+        "title": "Ricci Scalar (R)",
+        "definition": "The Ricci scalar is the trace of the Ricci tensor with respect to the inverse metric (R = g^{\mu\nu} R_{\mu\nu}). It represents the overall scalar curvature of spacetime at a point.",
+        "formula": "R = g^{\mu\nu} R_{\mu\nu}"
+    },
+    "einstein_tensor": {
+        "title": "Einstein Tensor (G_{\mu\nu})",
+        "definition": "The Einstein tensor combines the Ricci tensor, Ricci scalar, and metric tensor. It has the crucial property of being divergence-free (\nabla^{\mu} G_{\mu\nu} = 0), mirroring the conservation of energy-momentum. It forms the geometric side of the Einstein Field Equations.",
+        "formula": "G_{\mu\nu} = R_{\mu\nu} - \frac{1}{2} g_{\mu\nu} R"
+    },
+    "stress_energy_tensor": {
+        "title": "Stress-Energy Tensor (T_{\mu\nu})",
+        "definition": "The stress-energy tensor describes the distribution of energy, momentum, pressure, and stress of matter and fields in spacetime. It acts as the source of gravitational fields in the Einstein Field Equations.",
+        "formula": "T_{\mu\nu}"
+    },
+    "efe": {
+        "title": "Einstein Field Equations (EFE)",
+        "definition": "The Einstein Field Equations relate the geometry of spacetime (represented by the Einstein tensor G_{\mu\nu}) to the distribution of matter and energy (represented by the stress-energy tensor T_{\mu\nu}). They form the foundation of General Relativity.",
+        "formula": "G_{\mu\nu} = \frac{8\pi G}{c^4} T_{\mu\nu} \quad \text{(or } G_{\mu\nu} = \kappa T_{\mu\nu} \text{ in chosen units)}"
+    },
+     "geodesic_equation": {
+        "title": "Geodesic Equation",
+        "definition": "The geodesic equation describes the path of freely falling particles (timelike geodesics) or light rays (null geodesics) through curved spacetime. It involves the Christoffel symbols.",
+        "formula": "\frac{d^2 x^{\lambda}}{d\tau^2} + \Gamma^{\lambda}_{\mu\nu} \frac{dx^{\mu}}{d\tau} \frac{dx^{\nu}}{d\tau} = 0"
+    },
+    "flamms_paraboloid": {
+        "title": "Flamm's Paraboloid",
+        "definition": "Flamm's paraboloid is an embedding diagram that visualizes the spatial curvature of the equatorial plane (t=const, \theta=\pi/2) of the Schwarzschild metric. It embeds the 2D curved surface into flat 3D Euclidean space.",
+        "formula": "ds^2 = \frac{dr^2}{1 - 2M/r} + r^2 d\phi^2 \implies z(r) = \int \sqrt{\frac{2M/r}{1-2M/r}} dr = \sqrt{8M(r-2M)}"
+    }
+} 

@@ -170,4 +170,73 @@
 
 .embedding-result-container .katex-display {
     margin: 0; /* Adjust margin if needed */
+}
+
+/* Styles for Embedding controls section */
+.embedding-controls-section {
+    border: 1px solid #eee;
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 20px;
+    background-color: #fcfcfc;
+}
+
+.embedding-controls-section h5 {
+    margin-top: 0;
+    text-align: center;
+    color: #444;
+}
+
+.embedding-params-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.input-group-inline {
+    display: flex;
+    flex-direction: column; /* Stack label and input */
+    /* Or use display: flex; align-items: center; gap: 5px; for inline label/input */
+}
+
+.input-group-inline label {
+    font-weight: bold;
+    font-size: 0.9em;
+    margin-bottom: 3px;
+    color: #555;
+}
+
+.input-group-inline input[type="text"],
+.input-group-inline input[type="number"] {
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-family: monospace;
+    width: 100%; 
+    box-sizing: border-box;
+}
+
+/* Style for inline definition links */
+.definition-link-inline {
+    background: none;
+    border: none;
+    padding: 0 3px;
+    font-size: 0.9em;
+    color: #3498db;
+    cursor: pointer;
+    vertical-align: middle;
+}
+.definition-link-inline:hover {
+    color: #2980b9;
+    text-decoration: underline;
+}
+
+
+/* Grid layout for plots */
+.plot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); /* Adjust minmax as needed */
+    gap: 20px;
+    align-items: start; /* Align plots at the top */
 } 

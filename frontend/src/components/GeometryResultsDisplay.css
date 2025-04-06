@@ -53,4 +53,21 @@
 
 .katex {
    font-size: 1.1em; /* Adjust size as needed */
+}
+
+.definition-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit; /* Inherit font styles from parent (h3) */
+    color: inherit; /* Inherit color */
+    cursor: pointer;
+    text-decoration: underline dotted;
+    text-decoration-color: #3498db;
+    transition: color 0.2s ease;
+}
+
+.definition-link:hover {
+    color: #2980b9; /* Darker blue on hover */
+    text-decoration-color: #2980b9;
 } 
