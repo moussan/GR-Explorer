@@ -2,7 +2,7 @@ import sympy
 import numpy as np
 from fastapi import APIRouter, HTTPException, Body
 from sympy import symbols, Matrix, sympify, latex, Symbol, Array, lambdify
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional, Tuple, Union
 import json
 import os
 from pathlib import Path

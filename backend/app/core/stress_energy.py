@@ -1,6 +1,6 @@
 import sympy
-from sympy import Matrix, symbols, diag, simplify, Expr
-from typing import List, Union
+from sympy import Matrix, symbols, diag, simplify, Expr, Number
+from typing import List, Union, Dict, Optional
 
 # Import metric if needed for specific types like perfect fluid
 from .metric import create_metric_tensor # Assuming this might be needed
