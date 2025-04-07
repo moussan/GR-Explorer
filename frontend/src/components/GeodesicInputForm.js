@@ -1,25 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './GeodesicInputForm.css'; // Create CSS file next
 
 // Default initial state example (corresponds to Schwarzschild radial infall from r=10)
 // Note: Proper initial velocity often depends on normalization with the *specific* metric.
 // This form provides the fields; calculation of correct u^mu might happen externally or need guidance.
-const defaultInitialPosition = ["0.0", "10.0", "1.570796", "0.0"]; // t, r, theta=pi/2, phi
-const defaultInitialVelocity = ["1.118", "0.0", "0.0", "0.0"]; // dt/dtau, dr/dtau, dtheta/dtau, dphi/dtau (example for M=1, r=10)
-const defaultTimeSpan = ["0.0", "50.0"];
-const defaultNumPoints = "200";
-const defaultParams = [{ name: 'M', value: '1.0' }];
+// const defaultInitialPosition = ["0.0", "10.0", "1.570796", "0.0"]; // t, r, theta=pi/2, phi
+// const defaultInitialVelocity = ["1.118", "0.0", "0.0", "0.0"]; // dt/dtau, dr/dtau, dtheta/dtau, dphi/dtau (example for M=1, r=10)
+// const defaultTimeSpan = ["0.0", "50.0"];
+// const defaultNumPoints = "200";
+// const defaultParams = [{ name: 'M', value: '1.0' }];
+
+// Helper to check if a string represents a valid number
+const isValidNumber = (value) => !isNaN(parseFloat(value)) && isFinite(value);
 
 function GeodesicInputForm({ onSubmit, onError, currentCoords = ["t", "r", "theta", "phi"] }) {
-    const [initialPosition, setInitialPosition] = useState(defaultInitialPosition);
-    const [initialVelocity, setInitialVelocity] = useState(defaultInitialVelocity);
-    const [timeSpan, setTimeSpan] = useState(defaultTimeSpan); // [tau_min, tau_max]
-    const [numPoints, setNumPoints] = useState(defaultNumPoints);
-    const [parameters, setParameters] = useState(defaultParams); // Array of {name: string, value: string}
+    const numCoords = currentCoords?.length || 4; // Default to 4 if not provided
+    const initialArray = Array(numCoords).fill('');
 
-    const handleVectorChange = (event, index, setter) => {
+    const [initialPosition, setInitialPosition] = useState(initialArray);
+    const [initialVelocity, setInitialVelocity] = useState(initialArray);
+    const [timeSpan, setTimeSpan] = useState(["0.0", "50.0"]); // [tau_min, tau_max]
+    const [numPoints, setNumPoints] = useState("200");
+    const [parameters, setParameters] = useState([{ name: 'M', value: '1.0' }]); // Array of {name: string, value: string}
+    const [isFormValid, setIsFormValid] = useState(false); // State for validity
+
+    // Default coordinate names
+    const coordNames = currentCoords || ['t', 'r', 'θ', 'φ'];
+
+    // --- Validation Effect --- 
+    useEffect(() => {
+        const posValid = initialPosition.every(isValidNumber);
+        const velValid = initialVelocity.every(isValidNumber);
+        const spanValid = isValidNumber(timeSpan[0]) && isValidNumber(timeSpan[1]) && parseFloat(timeSpan[0]) < parseFloat(timeSpan[1]);
+        const pointsValid = isValidNumber(numPoints) && parseInt(numPoints, 10) > 0 && Number.isInteger(Number(numPoints));
+        const paramValuesValid = parameters.every(param => isValidNumber(param.value));
+        
+        setIsFormValid(posValid && velValid && spanValid && pointsValid && paramValuesValid);
+
+        // Clear previous form errors when inputs change
+        if (onError) {
+            onError(null);
+        }
+    }, [initialPosition, initialVelocity, timeSpan, numPoints, parameters, onError]);
+
+    const handleInputChange = (setter) => (event, index) => {
         const newValue = event.target.value;
-        setter(prev => prev.map((val, i) => (i === index ? newValue : val)));
+        setter(prev => {
+            const updated = [...prev];
+            updated[index] = newValue;
+            return updated;
+        });
     };
 
     const handleParamChange = (event, index, field) => {
@@ -39,6 +69,12 @@ function GeodesicInputForm({ onSubmit, onError, currentCoords = ["t", "r", "thet
 
     const handleSubmit = (event) => {
         event.preventDefault();
+        if (!isFormValid) {
+            if (onError) {
+                onError("Please fill in all fields with valid numbers. Time span must be valid and positive, and number of points must be an integer greater than 0.");
+            }
+            return;
+        }
         onError(null); // Clear previous form errors on submit
 
         // Convert numeric fields from string to number, handle potential errors
@@ -88,15 +124,17 @@ function GeodesicInputForm({ onSubmit, onError, currentCoords = ["t", "r", "thet
             <div className="form-section">
                 <h4>Initial Position (x<sup>&mu;</sup> at &tau;=0)</h4>
                 <div className="vector-input">
-                    {initialPosition.map((val, index) => (
-                        <div key={index} className="input-group">
-                            <label htmlFor={`pos-${index}`}>{currentCoords[index]}:</label>
+                    {coordNames.map((coord, index) => (
+                        <div key={`pos-${index}`} className="input-group">
+                            <label htmlFor={`pos-${index}`}>{coord}:</label>
                             <input 
                                 id={`pos-${index}`}
                                 type="text" 
-                                value={val}
-                                onChange={(e) => handleVectorChange(e, index, setInitialPosition)}
-                                required 
+                                value={initialPosition[index]}
+                                onChange={(e) => handleInputChange(setInitialPosition)(e, index)}
+                                placeholder={`${coord}₀`}
+                                aria-label={`Initial position ${coord}`}
+                                className={!isValidNumber(initialPosition[index]) && initialPosition[index] !== '' ? 'input-error' : ''}
                             />
                         </div>
                     ))}
@@ -107,15 +145,17 @@ function GeodesicInputForm({ onSubmit, onError, currentCoords = ["t", "r", "thet
                 <h4>Initial 4-Velocity (u<sup>&mu;</sup> = dx<sup>&mu;</sup>/d&tau; at &tau;=0)</h4>
                  <p className="info-text">Note: Ensure velocity satisfies normalization (g<sub>&mu;&nu;</sub>u<sup>&mu;</sup>u<sup>&nu;</sup> = -1 for timelike, 0 for null) for the chosen metric.</p>
                 <div className="vector-input">
-                    {initialVelocity.map((val, index) => (
-                         <div key={index} className="input-group">
-                            <label htmlFor={`vel-${index}`}>d{currentCoords[index]}/d&tau;:</label>
+                    {coordNames.map((coord, index) => (
+                        <div key={`vel-${index}`} className="input-group">
+                            <label htmlFor={`vel-${index}`}>d{coord}/d&tau;:</label>
                             <input 
                                 id={`vel-${index}`}
                                 type="text" 
-                                value={val}
-                                onChange={(e) => handleVectorChange(e, index, setInitialVelocity)}
-                                required
+                                value={initialVelocity[index]}
+                                onChange={(e) => handleInputChange(setInitialVelocity)(e, index)}
+                                placeholder={`d${coord}/dtau₀`}
+                                aria-label={`Initial velocity d${coord}/dtau`}
+                                className={!isValidNumber(initialVelocity[index]) && initialVelocity[index] !== '' ? 'input-error' : ''}
                             />
                         </div>
                     ))}
@@ -131,8 +171,8 @@ function GeodesicInputForm({ onSubmit, onError, currentCoords = ["t", "r", "thet
                             id="tau-min"
                             type="text" 
                             value={timeSpan[0]}
-                            onChange={(e) => handleVectorChange(e, 0, setTimeSpan)}
-                            required
+                            onChange={(e) => handleInputChange(setTimeSpan)(e, 0)}
+                            className={(!isValidNumber(timeSpan[0]) || parseFloat(timeSpan[0]) >= parseFloat(timeSpan[1])) && timeSpan[0] !== '' ? 'input-error' : ''}
                         />
                     </div>
                     <div className="input-group">
@@ -141,8 +181,8 @@ function GeodesicInputForm({ onSubmit, onError, currentCoords = ["t", "r", "thet
                             id="tau-max"
                             type="text" 
                             value={timeSpan[1]}
-                            onChange={(e) => handleVectorChange(e, 1, setTimeSpan)}
-                            required
+                            onChange={(e) => handleInputChange(setTimeSpan)(e, 1)}
+                            className={(!isValidNumber(timeSpan[1]) || parseFloat(timeSpan[1]) <= parseFloat(timeSpan[0])) && timeSpan[1] !== '' ? 'input-error' : ''}
                         />
                     </div>
                      <div className="input-group">
@@ -154,7 +194,7 @@ function GeodesicInputForm({ onSubmit, onError, currentCoords = ["t", "r", "thet
                             onChange={(e) => setNumPoints(e.target.value)}
                             min="2" 
                             step="1"
-                            required
+                            className={(!isValidNumber(numPoints) || parseInt(numPoints, 10) <= 1) && numPoints !== '' ? 'input-error' : ''}
                         />
                     </div>
                 </div>
@@ -195,7 +235,7 @@ function GeodesicInputForm({ onSubmit, onError, currentCoords = ["t", "r", "thet
                     type="submit" 
                     disabled={!isFormValid}
                     className="primary-button"
-                    title={!isFormValid ? "Fill in all required fields correctly." : "Calculate geodesic path"}
+                    title={!isFormValid ? "Fill in all fields with valid positive numbers." : "Calculate geodesic path"}
                 >
                     Calculate Geodesic
                 </button>

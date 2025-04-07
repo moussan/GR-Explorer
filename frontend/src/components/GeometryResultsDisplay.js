@@ -84,6 +84,7 @@ function GeometryResultsDisplay({ results, onShowDefinition }) {
             {results.christoffel && (
                 <div className="result-section">
                     <h3><InfoTitle title={<>Christoffel Symbols (<InlineMath math="\Gamma^{\lambda}_{\mu\nu}" />)</>} definitionKey="christoffel" /></h3>
+                    {/* eslint-disable-next-line no-useless-escape */}
                     {renderTensorComponents(results.christoffel.components_latex, '\Gamma')}
                 </div>
             )}

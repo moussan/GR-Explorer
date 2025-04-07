@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify'; // Import toast
 import GeodesicInputForm from './GeodesicInputForm';
 import Plot from 'react-plotly.js';
-import { InlineMath } from 'react-katex'; // For title
+import './GeodesicSection.css'; // Create this file for section-specific styles
 
 const API_BASE_URL = '/api';
 

@@ -10,8 +10,6 @@ import GeometryResultsDisplay from './components/GeometryResultsDisplay';
 import StressEnergyInputForm, { initialStressEnergyState } from './components/StressEnergyInputForm';
 // Import the Geodesic form component
 import GeodesicSection from './components/GeodesicSection';
-// Import plotting library
-import Plot from 'react-plotly.js'; // Use Plotly for plotting
 // Import KaTeX for rendering verification results
 import 'katex/dist/katex.min.css'; 
 import { InlineMath } from 'react-katex';

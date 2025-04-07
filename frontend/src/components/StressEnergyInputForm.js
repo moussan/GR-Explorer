@@ -1,6 +1,6 @@
-import React from 'react'; 
-// Removed useState, useEffect - now a controlled component
-import './StressEnergyInputForm.css'; 
+import React from 'react';
+import { InlineMath } from 'react-katex';
+import './StressEnergyInputForm.css';
 
 // Define initial state structure (can be used in App.js)
 export const initialStressEnergyState = () => ({
@@ -13,8 +13,13 @@ export const initialStressEnergyState = () => ({
         ['0', '0', '0', '0']
     ],
     params: { density: 'rho', pressure: 'p' },
-    coords: ["t", "r", "theta", "phi"] 
 });
+
+const presetOptions = [
+    { value: 'vacuum', label: 'Vacuum (Tμν = 0)' },
+    { value: 'dust', label: 'Dust' },
+    { value: 'perfect_fluid', label: 'Perfect Fluid' },
+];
 
 function StressEnergyInputForm({ stressEnergyDef, onStateChange, onSubmit }) {
     // Destructure props for easier access
@@ -23,7 +28,6 @@ function StressEnergyInputForm({ stressEnergyDef, onStateChange, onSubmit }) {
         preset_name = 'vacuum',
         components = initialStressEnergyState().components, // Default if not provided
         params = initialStressEnergyState().params,
-        coords = initialStressEnergyState().coords
     } = stressEnergyDef || {}; // Handle case where stressEnergyDef might be initially null
 
     // --- Event Handlers --- 
@@ -104,9 +108,11 @@ function StressEnergyInputForm({ stressEnergyDef, onStateChange, onSubmit }) {
                         value={preset_name} // Use prop value
                         onChange={handlePresetChange} // Use handler
                     >
-                        <option value="vacuum">Vacuum (T<sub>&mu;&nu;</sub> = 0)</option>
-                        <option value="dust">Dust (Pressureless)</option>
-                        <option value="perfect_fluid">Perfect Fluid</option>
+                        {presetOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
                     </select>
 
                     {preset_name === 'dust' && (
