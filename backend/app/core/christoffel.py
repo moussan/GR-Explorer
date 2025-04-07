@@ -1,7 +1,7 @@
 import sympy
-from sympy import Matrix, Array, zeros, simplify, diff, N
+from sympy import Matrix, Array, zeros, simplify, diff, N, Symbol
 from sympy.tensor.array import MutableDenseNDimArray
-from typing import List, Tuple
+from typing import List, Tuple, Any
 
 # Import coordinate symbols and metric functions if needed for examples/tests
 # from .metric import DEFAULT_COORDS, create_metric_tensor, calculate_inverse_metric
@@ -9,8 +9,8 @@ from typing import List, Tuple
 def calculate_christoffel_symbols(
     metric: Matrix,
     inverse_metric: Matrix,
-    coords: List[sympy.Symbol]
-) -> Tuple[Array, str]:
+    coords: List[Symbol]
+) -> Tuple[List[List[List[Any]]], str]:
     """
     Calculates the Christoffel symbols of the second kind (Gamma^lambda_mu_nu).
     Gamma^lambda_mu_nu = 1/2 * g^lambda_rho * (d_mu(g_rho_nu) + d_nu(g_rho_mu) - d_rho(g_mu_nu))
@@ -23,8 +23,8 @@ def calculate_christoffel_symbols(
 
     Returns:
         A tuple containing:
-        - A SymPy Array representing the Christoffel symbols Gamma^lambda_mu_nu.
-          Indexed as christoffel[lambda, mu, nu].
+        - A nested list representing the Christoffel symbols Gamma^lambda_mu_nu.
+          Indexed as christoffel[lambda][mu][nu].
         - An error message string if calculation fails, otherwise None.
 
     Raises:
@@ -70,8 +70,9 @@ def calculate_christoffel_symbols(
                          christoffel[lam, mu, nu] = simplify(sympy.Rational(1, 2) * sum_val)
                     # else: christoffel is already zero
                     
-        # Return as immutable Array for consistency if desired, or keep mutable
-        return Array(christoffel), None 
+        # Convert the final result to a nested list before returning
+        christoffel_list = christoffel.tolist()
+        return christoffel_list, None 
 
     except Exception as e:
         error_message = f"Error calculating Christoffel symbols: {e}"
@@ -108,7 +109,7 @@ if __name__ == '__main__':
                 for mu in range(4):
                     for nu in range(4):
                         # Simplify here for cleaner output display
-                        term = simplify(gamma[lam, mu, nu]) 
+                        term = simplify(gamma[lam][mu][nu]) 
                         if term != 0:
                             count += 1
                             print(f"Gamma^{DEFAULT_COORDS[lam]}_({DEFAULT_COORDS[mu]},{DEFAULT_COORDS[nu]}) = {term}")

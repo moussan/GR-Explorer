@@ -1,3 +1,235 @@
+:root {
+  /* Light Theme (Default) */
+  --bg-color: #f4f7f6;
+  --content-bg: #ffffff;
+  --sidebar-bg: #f8f9fa;
+  --text-color: #333;
+  --heading-color: #333;
+  --border-color: #e0e0e0;
+  --primary-color: #007bff;
+  --primary-hover: #0056b3;
+  --secondary-color: #6c757d;
+  --secondary-hover: #545b62;
+  --danger-color: #dc3545;
+  --danger-hover: #b02a37;
+  --link-color: #0056b3;
+  --input-bg: #fff;
+  --input-border: #ced4da;
+  --input-text: #495057;
+  --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.theme-dark {
+  --bg-color: #212529;
+  --content-bg: #343a40;
+  --sidebar-bg: #2c3034;
+  --text-color: #dee2e6;
+  --heading-color: #f8f9fa;
+  --border-color: #495057;
+  --primary-color: #0d6efd; /* Slightly brighter blue for dark */
+  --primary-hover: #3b8aff;
+  --secondary-color: #6c757d;
+  --secondary-hover: #8d969e;
+  --danger-color: #dc3545;
+  --danger-hover: #e96573;
+  --link-color: #6ea8fe;
+  --input-bg: #495057;
+  --input-border: #6c757d;
+  --input-text: #f8f9fa;
+  --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  /* Other body styles from index.css */
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.App-header {
+  background-color: var(--content-bg);
+  padding: 15px 30px;
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.App-header h1 {
+  color: var(--heading-color);
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.theme-toggle {
+  /* Uses general button styles */
+}
+
+.App-body-container {
+  display: flex;
+  flex-grow: 1; /* Allows container to fill space */
+  overflow: hidden; /* Prevent scrollbars on container */
+}
+
+.App-content {
+  flex-grow: 1; /* Main content takes available space */
+  padding: 20px 30px;
+  overflow-y: auto; /* Allow content area to scroll */
+  background-color: var(--bg-color);
+}
+
+.App-footer {
+  background-color: var(--content-bg);
+  color: var(--text-color);
+  padding: 15px 30px;
+  text-align: center;
+  font-size: 0.9rem;
+  border-top: 1px solid var(--border-color);
+  margin-top: auto; /* Pushes footer to bottom */
+}
+
+.App-footer p {
+  margin: 0;
+}
+
+/* --- Apply Theme Variables --- */
+
+.content-section {
+  background-color: var(--content-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+  /* ... other content-section styles ... */
+}
+
+.content-section h4 {
+  color: var(--heading-color);
+  border-bottom-color: var(--border-color);
+  /* ... other h4 styles ... */
+}
+
+.subsection {
+  border-left-color: var(--primary-color);
+  background-color: var(--content-bg); /* Match content section */
+  /* ... other subsection styles ... */
+}
+
+.subsection h5 {
+  color: var(--heading-color);
+  /* ... */
+}
+
+.instructional-sidebar {
+  background-color: var(--sidebar-bg);
+  border-left-color: var(--border-color);
+  /* ... */
+}
+
+.instructional-sidebar h4, 
+.instructional-sidebar h5 {
+  color: var(--heading-color);
+  border-bottom-color: var(--border-color);
+  /* ... */
+}
+
+.instructional-sidebar p {
+  color: var(--text-color);
+}
+
+.sidebar-examples pre {
+  background-color: var(--bg-color); /* Use main bg for contrast */
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+/* Forms */
+input[type="text"],
+input[type="number"],
+select {
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--input-text);
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+
+input.input-error {
+  border-color: var(--danger-color);
+}
+
+label {
+  color: var(--text-color);
+}
+
+/* Buttons */
+.primary-button {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+.primary-button:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.secondary-button {
+  background-color: var(--secondary-color);
+  color: #fff;
+}
+.secondary-button:hover:not(:disabled) {
+  background-color: var(--secondary-hover);
+}
+
+.danger-button {
+  background-color: var(--danger-color);
+  color: #fff;
+}
+.danger-button:hover:not(:disabled) {
+  background-color: var(--danger-hover);
+}
+
+/* Definition Links */
+.definition-link, .definition-link-inline {
+  color: var(--link-color);
+}
+.definition-link:hover, .definition-link-inline:hover {
+  color: var(--primary-hover); /* Use primary hover for consistency */
+}
+.definition-link-inline {
+    border-color: var(--input-border);
+}
+.definition-link-inline:hover {
+    background-color: var(--border-color); /* Subtle hover */
+}
+
+/* Other Themed Elements */
+.loading-indicator {
+  background-color: var(--content-bg);
+  color: var(--text-color);
+  border: 1px dashed var(--border-color);
+}
+
+.error-message {
+  /* Already styled with specific colors, might not need theme adjustment */
+}
+
+.verification-result.verified-true {
+  /* Already styled */
+}
+.verification-result.verified-false {
+  /* Already styled */
+}
+
+/* Add theme adjustments for katex elements if needed */
+.katex {
+  color: var(--text-color);
+}
+
+/* ... (keep existing App.css rules, ensure they don't conflict) ... */
+
 .App-content {
   padding: 20px;
   max-width: 1200px; /* Allow wider content */

@@ -16,11 +16,34 @@ import { InlineMath } from 'react-katex';
 import ScenarioManager from './components/ScenarioManager'; // Import ScenarioManager
 import DefinitionDisplay from './components/DefinitionDisplay'; // Import DefinitionDisplay
 import EmbeddingSection from './components/EmbeddingSection'; // Import new component
+import InstructionalSidebar from './components/InstructionalSidebar';
 
 // Base URL for the backend API 
 // Use the proxy defined in package.json for development, 
 // or configure environment variables for production.
 const API_BASE_URL = '/api'; // Relative path assumes proxy is set up
+
+// Example sidebar content map
+const sidebarContentMap = {
+  default: {
+    title: "GR Explorer",
+    text: "Welcome! Start by defining a metric tensor using SymPy syntax, or load a saved scenario."
+  },
+  metric_input: {
+    title: "Metric Definition (gμν)",
+    text: "Define the components of the metric tensor using SymPy syntax (e.g., '1', '-(1-2*M/r)', 'r**2'). Ensure coordinate symbols match those used in the components. M, G, c, etc. can be used as symbolic parameters.",
+    examples: {
+      'Schwarzschild': 'g_tt = -(1-2*M/r), g_rr = 1/(1-2*M/r), g_thetatheta = r**2, ...'
+    },
+    explanation: "The metric tensor defines the geometry of spacetime and how distances are measured."
+  },
+  geometry_results: {
+    title: "Geometry Results",
+    text: "Shows calculated geometric quantities derived from the metric: Inverse Metric, Christoffel Symbols, Riemann Tensor, Ricci Tensor/Scalar, Einstein Tensor.",
+    explanation: "These tensors describe the curvature and gravitational field defined by the metric."
+  },
+  // ... Add entries for stress_energy_input, stress_energy_results, efe, geodesic_input, geodesic_results, embedding ...
+};
 
 function App() {
   const [backendMessage, setBackendMessage] = useState('Connecting to backend...');
@@ -46,6 +69,9 @@ function App() {
 
   // State for definition popup
   const [definitionKeyToShow, setDefinitionKeyToShow] = useState(null);
+
+  const [activeSection, setActiveSection] = useState('default'); // Track active section for sidebar
+  const [theme, setTheme] = useState('light'); // State for theme
 
   // Fetch initial welcome message from backend
   useEffect(() => {
@@ -100,6 +126,7 @@ function App() {
       setEfeError(null);
       // Clear geodesic params as they depend on metric parameters
       // setCurrentGeodesicParams(null); // No longer needed
+      setActiveSection('metric_input'); // Set active section
   }, []);
 
   // Handler for StressEnergyInputForm state changes
@@ -123,7 +150,7 @@ function App() {
 
   // --- Calculation Handlers (using state directly) --- 
 
-  const handleCalculateGeometry = () => { // Now takes no args, uses metricDef state
+  const handleCalculateGeometry = useCallback(() => {
     console.log("Sending metric data to backend:", metricDef);
     setGeometryLoading(true);
     setGeometryError(null);
@@ -143,6 +170,7 @@ function App() {
       .then(response => {
         setGeometryResults(response.data);
         toast.success("Geometry calculated successfully!");
+        setActiveSection('geometry_results'); // Update section on successful result display
       })
       .catch(err => {
         let errorMsg = err.response?.data?.detail || err.message || 'An error occurred during geometry calculation.';
@@ -152,7 +180,7 @@ function App() {
       .finally(() => {
         setGeometryLoading(false);
       });
-  };
+  }, [metricDef]);
 
   const handleCalculateStressEnergy = () => { // No args, uses stressEnergyDef state
     console.log("Sending stress-energy data:", stressEnergyDef);
@@ -240,6 +268,7 @@ function App() {
         // setEmbeddingResult(null); // No longer needed
         // setEmbeddingError(null); // No longer needed
         setDefinitionKeyToShow(null); 
+        setActiveSection('metric_input'); // Focus metric after load
         
         toast.success("Scenario loaded successfully!"); 
    }, []);
@@ -253,8 +282,16 @@ function App() {
        setDefinitionKeyToShow(null);
    }, []);
 
+  // --- Theme Switcher --- 
+  const toggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  };
+
+  // Determine sidebar content based on active section
+  const currentSidebarContent = sidebarContentMap[activeSection] || sidebarContentMap.default;
+
   return (
-    <div className="App">
+    <div className={`App theme-${theme}`}>
       <ToastContainer 
         position="top-right"
         autoClose={5000}
@@ -270,6 +307,9 @@ function App() {
       <header className="App-header">
         <h1>GR Explorer</h1>
         <p>{backendMessage}</p>
+        <button onClick={toggleTheme} className="theme-toggle secondary-button">
+          Switch to {theme === 'light' ? 'Dark' : 'Light'} Theme
+        </button>
       </header>
       
       {/* Add Scenario Manager at the top */} 
@@ -282,7 +322,7 @@ function App() {
 
       <main className="App-content">
         {/* --- Metric Section --- */}
-        <section className="content-section metric-section">
+        <section className="content-section metric-section" onFocus={() => setActiveSection('metric_input')}>
             {/* Use h4 for section title */} 
             <h4>Metric Definition (<InlineMath math="g_{\mu\nu}" />)</h4>
             <MetricInputForm 
@@ -297,7 +337,7 @@ function App() {
         
         {/* --- Geometry Results & Embedding Section --- */} 
         {geometryResults && !geometryLoading && !geometryError && (
-            <section className="content-section results-section">
+            <section className="content-section results-section" onFocus={() => setActiveSection('geometry_results')}>
                  {/* Title now inside GeometryResultsDisplay */} 
                  {/* <h4>Geometry Results</h4> */} 
                 <div className="results-container">
@@ -386,6 +426,9 @@ function App() {
              onClose={handleCloseDefinition} 
          />
       )}
+
+      {/* --- Sidebar --- */} 
+      <InstructionalSidebar content={currentSidebarContent} />
     </div>
   );
 }

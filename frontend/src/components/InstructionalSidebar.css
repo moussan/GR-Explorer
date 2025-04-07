@@ -1,0 +1,51 @@
+/* Styles for InstructionalSidebar.js */
+
+.instructional-sidebar {
+    padding: 20px;
+    background-color: #f8f9fa; /* Light background */
+    border-left: 1px solid #e0e0e0;
+    height: 100%; /* Make it take full height if possible within layout */
+    overflow-y: auto; /* Allow scrolling if content overflows */
+    min-width: 250px; /* Ensure minimum width */
+    max-width: 350px; /* Set a max width */
+    box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+}
+
+.instructional-sidebar h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #d1d1d1;
+    color: #343a40;
+    font-size: 1.15rem;
+}
+
+.sidebar-content p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #495057;
+}
+
+.sidebar-examples,
+.sidebar-explanation {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px dashed #ccc;
+}
+
+.sidebar-examples h5,
+.sidebar-explanation h5 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #0056b3;
+    font-size: 1rem;
+}
+
+.sidebar-examples pre {
+    background-color: #e9ecef;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    white-space: pre-wrap; /* Wrap long lines */
+    word-break: break-all;
+} 

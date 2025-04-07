@@ -106,35 +106,66 @@ def calculate_all_geometry(metric_input: MetricInput = Body(...)):
         coords = parse_coords(metric_input.coords)
         metric_components_sympy = parse_components(metric_input.components)
         
+        # --- !!! TEMPORARY DEBUGGING: Force Minkowski Metric !!! ---
+        print("[DEBUG] !!! OVERRIDING INPUT WITH MINKOWSKI METRIC !!!")
+        coords = parse_coords(['t', 'x', 'y', 'z']) # Use standard Minkowski coords
+        metric_components_sympy = [
+            [-1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ]
+        metric_components_sympy = [[sympify(c) for c in row] for row in metric_components_sympy]
+        # --- !!! END TEMPORARY DEBUGGING !!! ---
+        
+        print("[DEBUG] Parsed inputs (or overridden). ") # DEBUG
+        
         # --- Perform Calculations (Core Logic) ---
         g = metric_core.create_metric_tensor(metric_components_sympy, coords)
+        print("[DEBUG] Calculated metric tensor g.") # DEBUG
+        
         g_inv = metric_core.calculate_inverse_metric(g) # Raises if singular
+        print("[DEBUG] Calculated inverse metric g_inv.") # DEBUG
         
-        # Unpack the result and error from Christoffel calculation
-        gamma_array, christoffel_error = christoffel_core.calculate_christoffel_symbols(g, g_inv, coords)
-        
-        # Check for errors from Christoffel calculation
+        # Receive the nested list and error from Christoffel calculation
+        gamma_list, christoffel_error = christoffel_core.calculate_christoffel_symbols(g, g_inv, coords)
         if christoffel_error:
-            # Raise a 500 error as this is an internal calculation failure
             raise HTTPException(status_code=500, detail=f"Error calculating Christoffel symbols: {christoffel_error}")
+        print("[DEBUG] Calculated Christoffel symbols (as list) gamma_list.") # DEBUG
         
-        # Note: Riemann calculation can be very slow. Use the unpacked array.
-        riemann = riemann_core.calculate_riemann_tensor(gamma_array, coords)
+        # Convert list to Array for Riemann calculation
+        gamma_array = Array(gamma_list)
+        print("[DEBUG] Converted gamma_list to gamma_array.") # DEBUG
+        
+        # Explicitly create a copy before passing to Riemann function
+        gamma_array_copy = gamma_array.copy()
+        print("[DEBUG] Created gamma_array_copy.") # DEBUG
+        
+        riemann = riemann_core.calculate_riemann_tensor(gamma_array_copy, coords) # Pass the copy
+        print("[DEBUG] Calculated Riemann tensor riemann.") # DEBUG
+        
         ricci = ricci_core.calculate_ricci_tensor(riemann)
+        print("[DEBUG] Calculated Ricci tensor ricci.") # DEBUG
+        
         ricci_s = ricci_core.calculate_ricci_scalar(ricci, g_inv)
+        print("[DEBUG] Calculated Ricci scalar ricci_s.") # DEBUG
+        
         einstein = einstein_core.calculate_einstein_tensor(ricci, ricci_s, g)
+        print("[DEBUG] Calculated Einstein tensor einstein.") # DEBUG
         # --- End Calculations ---
         
         # --- Format Results --- 
+        print("[DEBUG] Formatting results...") # DEBUG
         response = GeometryCalculationsResponse(
             metric=format_tensor_output(g, "munu"),
             inverse_metric=format_tensor_output(g_inv, "munu"),
-            christoffel=format_tensor_output(gamma_array, "Lmunu"), # Use the unpacked array
+            christoffel=format_tensor_output(gamma_array, "Lmunu"), # Format the original array
             riemann=format_tensor_output(riemann, "Rrsmn"),
             ricci_tensor=format_tensor_output(ricci, "munu"),
             ricci_scalar=SymbolicScalarOutput(latex=latex(simplify(ricci_s))),
             einstein_tensor=format_tensor_output(einstein, "munu")
         )
+        print("[DEBUG] Formatting complete.") # DEBUG
         return response
 
     except ValueError as e:
