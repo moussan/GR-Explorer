@@ -1,0 +1,31 @@
+/* Styles for GeodesicSection.js */
+
+.geodesic-section {
+    /* Inherits .content-section styles */
+    /* Add specific overrides if needed */
+}
+
+.geodesic-section h4 {
+    /* Inherits general h4 styles */
+}
+
+/* Styles for plots within this section */
+.geodesic-section .plot-container {
+    margin-top: 20px;
+}
+
+.geodesic-section .plot-grid {
+    /* Inherits general .plot-grid styles from App.css */
+}
+
+.geodesic-section .plot-wrapper {
+    /* Inherits general .plot-wrapper styles from App.css */
+}
+
+.geodesic-section .loading-indicator {
+    /* Inherits general styles */
+}
+
+.geodesic-section .error-message {
+    /* Inherits general styles */
+} 

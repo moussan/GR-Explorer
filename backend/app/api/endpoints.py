@@ -110,20 +110,26 @@ def calculate_all_geometry(metric_input: MetricInput = Body(...)):
         g = metric_core.create_metric_tensor(metric_components_sympy, coords)
         g_inv = metric_core.calculate_inverse_metric(g) # Raises if singular
         
-        gamma = christoffel_core.calculate_christoffel_symbols(g, g_inv, coords)
-        # Note: Riemann calculation can be very slow
-        riemann = riemann_core.calculate_riemann_tensor(gamma, coords)
+        # Unpack the result and error from Christoffel calculation
+        gamma_array, christoffel_error = christoffel_core.calculate_christoffel_symbols(g, g_inv, coords)
+        
+        # Check for errors from Christoffel calculation
+        if christoffel_error:
+            # Raise a 500 error as this is an internal calculation failure
+            raise HTTPException(status_code=500, detail=f"Error calculating Christoffel symbols: {christoffel_error}")
+        
+        # Note: Riemann calculation can be very slow. Use the unpacked array.
+        riemann = riemann_core.calculate_riemann_tensor(gamma_array, coords)
         ricci = ricci_core.calculate_ricci_tensor(riemann)
         ricci_s = ricci_core.calculate_ricci_scalar(ricci, g_inv)
         einstein = einstein_core.calculate_einstein_tensor(ricci, ricci_s, g)
         # --- End Calculations ---
         
         # --- Format Results --- 
-        # Note: Simplification is applied within format_tensor_output
         response = GeometryCalculationsResponse(
             metric=format_tensor_output(g, "munu"),
             inverse_metric=format_tensor_output(g_inv, "munu"),
-            christoffel=format_tensor_output(gamma, "Lmunu"), 
+            christoffel=format_tensor_output(gamma_array, "Lmunu"), # Use the unpacked array
             riemann=format_tensor_output(riemann, "Rrsmn"),
             ricci_tensor=format_tensor_output(ricci, "munu"),
             ricci_scalar=SymbolicScalarOutput(latex=latex(simplify(ricci_s))),

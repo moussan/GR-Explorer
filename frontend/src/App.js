@@ -44,25 +44,6 @@ function App() {
   const [efeLoading, setEfeLoading] = useState(false);
   const [efeError, setEfeError] = useState(null);
 
-  // State for Geodesic Calculation
-  const [currentGeodesicParams, setCurrentGeodesicParams] = useState(null);
-  const [geodesicResults, setGeodesicResults] = useState(null);
-  const [geodesicLoading, setGeodesicLoading] = useState(false);
-  const [geodesicError, setGeodesicError] = useState(null);
-  
-   // State for Embedding Diagram
-  const [embeddingResult, setEmbeddingResult] = useState(null);
-  const [embeddingLoading, setEmbeddingLoading] = useState(false);
-  const [embeddingError, setEmbeddingError] = useState(null);
-  const [currentEmbeddingParams, setCurrentEmbeddingParams] = useState(null); 
-  // State for embedding numerical parameters
-  const [embeddingPlotParams, setEmbeddingPlotParams] = useState({
-      r_min: '', // Default to empty, backend will use dynamic default
-      r_max: '10.0',
-      num_points_r: '50',
-      num_points_phi: '60'
-  });
-
   // State for definition popup
   const [definitionKeyToShow, setDefinitionKeyToShow] = useState(null);
 
@@ -118,7 +99,7 @@ function App() {
       setEfeVerificationResult(null);
       setEfeError(null);
       // Clear geodesic params as they depend on metric parameters
-      setCurrentGeodesicParams(null);
+      // setCurrentGeodesicParams(null); // No longer needed
   }, []);
 
   // Handler for StressEnergyInputForm state changes
@@ -140,12 +121,6 @@ function App() {
       });
   }, []);
 
-  // Handler for embedding plot parameter changes
-  const handleEmbeddingParamChange = useCallback((event) => {
-      const { name, value } = event.target;
-      setEmbeddingPlotParams(prev => ({ ...prev, [name]: value }));
-  }, []);
-
   // --- Calculation Handlers (using state directly) --- 
 
   const handleCalculateGeometry = () => { // Now takes no args, uses metricDef state
@@ -158,11 +133,11 @@ function App() {
     setStressEnergyResults(null);
     // setStressEnergyDef(initialStressEnergyState()); // Optionally reset Tmunu form?
     setEfeVerificationResult(null); 
-    setGeodesicResults(null);
-    setCurrentGeodesicParams(null); 
-    setGeodesicError(null);
-    setEmbeddingResult(null);
-    setEmbeddingError(null);
+    // setGeodesicResults(null); // No longer needed
+    // setCurrentGeodesicParams(null); // No longer needed
+    // setGeodesicError(null); // No longer needed
+    // setEmbeddingResult(null); // No longer needed
+    // setEmbeddingError(null); // No longer needed
 
     axios.post(`${API_BASE_URL}/calculate/geometry`, metricDef) // Send current metricDef state
       .then(response => {
@@ -246,121 +221,26 @@ function App() {
       });
   };
 
-  const handleCalculateGeodesic = (geodesicInputData) => {
-      if (!metricDef) {
-        setGeodesicError("Cannot calculate geodesic: Metric definition is missing."); return;
-      }
-      console.log("Sending geodesic data:", geodesicInputData);
-      setGeodesicLoading(true);
-      setGeodesicError(null);
-      setGeodesicResults(null);
-      setCurrentGeodesicParams(null); 
-
-      const payload = {
-          ...geodesicInputData,
-          metric_components: metricDef.components, 
-          coords: metricDef.coords,
-      };
-      axios.post(`${API_BASE_URL}/calculate/geodesic`, payload)
-        .then(response => {
-            setGeodesicResults(response.data);
-            setCurrentGeodesicParams(geodesicInputData.parameter_values);
-        })
-        .catch(err => {
-            let errorMsg = err.response?.data?.detail || err.message || 'An error occurred during geodesic calculation.';
-            setGeodesicError(`Geodesic Calculation Error: ${errorMsg}`);
-        })
-        .finally(() => {
-            setGeodesicLoading(false);
-        });
-  };
-  
-   // --- Embedding Diagram Calculation --- 
-   const handleCalculateEmbedding = () => {
-        if (!metricDef) {
-            setEmbeddingError("Metric must be defined to calculate embedding diagram."); return;
-        }
-        const paramsForEmbedding = currentGeodesicParams || {}; 
-        console.log("Calculating embedding diagram for:", metricDef, "with params:", paramsForEmbedding);
-        setEmbeddingLoading(true);
-        setEmbeddingError(null);
-        setEmbeddingResult(null);
-        setCurrentEmbeddingParams(null);
-
-        // Convert numerical plot params from state, handle potential errors
-        let numParams = {};
-        try {
-            numParams.r_min = embeddingPlotParams.r_min ? parseFloat(embeddingPlotParams.r_min) : null; // Allow backend default
-            numParams.r_max = parseFloat(embeddingPlotParams.r_max);
-            numParams.num_points_r = parseInt(embeddingPlotParams.num_points_r, 10);
-            numParams.num_points_phi = parseInt(embeddingPlotParams.num_points_phi, 10);
-            
-            if (isNaN(numParams.r_max) || isNaN(numParams.num_points_r) || isNaN(numParams.num_points_phi)) {
-                throw new Error("r_max and num_points must be valid numbers.");
-            }
-            if (numParams.num_points_r <= 1 || numParams.num_points_phi <= 1) {
-                throw new Error("Number of points must be greater than 1.");
-            }
-            if (numParams.r_min !== null && isNaN(numParams.r_min)) {
-                 throw new Error("r_min must be a valid number if provided.");
-            }
-            if (numParams.r_min !== null && numParams.r_min >= numParams.r_max) {
-                throw new Error("r_min must be less than r_max.");
-            }
-
-        } catch (err) {
-            setEmbeddingError(`Invalid plot parameters: ${err.message}`);
-            setEmbeddingLoading(false);
-            return;
-        }
-
-        const payload = {
-             metric_input: metricDef, 
-             parameter_values: paramsForEmbedding, 
-             // Include numerical plot params
-             r_min: numParams.r_min,
-             r_max: numParams.r_max,
-             num_points_r: numParams.num_points_r,
-             num_points_phi: numParams.num_points_phi
-        };
-
-        axios.post(`${API_BASE_URL}/calculate/embedding/flamm`, payload)
-            .then(response => {
-                setEmbeddingResult(response.data);
-                setCurrentEmbeddingParams(paramsForEmbedding); // Store metric params used
-            })
-            .catch(err => {
-                let errorMsg = err.response?.data?.detail || err.message || 'An error occurred during embedding calculation.';
-                setEmbeddingError(`Embedding Error: ${errorMsg}`);
-            })
-            .finally(() => {
-                setEmbeddingLoading(false);
-            });
-   };
-   
-   // --- Scenario Management Handler --- 
-   const handleLoadScenario = useCallback((loadedDefinition) => {
+  // --- Scenario Management Handler --- 
+  const handleLoadScenario = useCallback((loadedDefinition) => {
         console.log("Loading scenario definition:", loadedDefinition);
-        // Update the state managed by App.js
         setMetricDef(loadedDefinition.metric_input);
         setStressEnergyDef(loadedDefinition.stress_energy_input);
         
-        // Clear all results when loading a new scenario
+        // Clear results, including previously tracked geodesic/embedding state
         setGeometryResults(null);
         setGeometryError(null);
         setStressEnergyResults(null);
         setStressEnergyError(null);
         setEfeVerificationResult(null);
         setEfeError(null);
-        setGeodesicResults(null);
-        setGeodesicError(null);
-        setCurrentGeodesicParams(null);
-        setEmbeddingResult(null);
-        setEmbeddingError(null);
-        setDefinitionKeyToShow(null); // Close definition popup on load
+        // setCurrentGeodesicParams(null); // Clear if kept
+        // setGeodesicResults(null); // No longer needed
+        // setGeodesicError(null); // No longer needed
+        // setEmbeddingResult(null); // No longer needed
+        // setEmbeddingError(null); // No longer needed
+        setDefinitionKeyToShow(null); 
         
-        // Maybe automatically trigger geometry calculation after load?
-        // handleCalculateGeometry(); // Uncomment to auto-calculate after load
         toast.success("Scenario loaded successfully!"); 
    }, []);
 
@@ -372,150 +252,6 @@ function App() {
    const handleCloseDefinition = useCallback(() => {
        setDefinitionKeyToShow(null);
    }, []);
-
-  // Helper function to generate plot data (example for r vs t)
-  const getRVSTPlotData = () => {
-    if (!geodesicResults?.position_coords) return [];
-    const t = geodesicResults.position_coords['t'];
-    const r = geodesicResults.position_coords['r'];
-    if (!t || !r) return [];
-    return [{ x: t, y: r, type: 'scatter', mode: 'lines', name: 'r(t)', marker: { color: 'blue' } }];
-  };
-  
-  // Helper function to generate plot layout (example for r vs t)
-  const getRVSTPlotLayout = () => {
-      return {
-          title: 'Geodesic: Radial Coordinate vs Time',
-          xaxis: { title: 'Coordinate Time (t)' },
-          yaxis: { title: 'Radial Coordinate (r)', range: [0, undefined] }, // Ensure r axis starts at 0
-          margin: { l: 50, r: 30, t: 50, b: 50 },
-          hovermode: 'closest'
-      };
-  };
-
-  const getXYPlotData = () => {
-    if (!geodesicResults?.position_coords) return [];
-    const r = geodesicResults.position_coords['r'];
-    const phi = geodesicResults.position_coords['phi'];
-    // Ensure theta is present if needed for non-equatorial plots later
-    // const theta = geodesicResults.position_coords['theta']; 
-    if (!r || !phi) return [];
-    
-    // Assuming equatorial motion (theta=pi/2) for standard x, y projection
-    const x = r.map((rad, i) => rad * Math.cos(phi[i]));
-    const y = r.map((rad, i) => rad * Math.sin(phi[i]));
-    
-    return [{
-      x: x,
-      y: y,
-      type: 'scatter',
-      mode: 'lines',
-      name: 'Path',
-      marker: { color: 'green' }
-    }];
-  };
-
-  const getXYPlotLayout = () => {
-    const layout = {
-      title: 'Geodesic: Equatorial Plane Projection',
-      xaxis: { title: 'x', scaleanchor: "y", scaleratio: 1 }, // Ensure aspect ratio is 1:1
-      yaxis: { title: 'y' },
-      margin: { l: 50, r: 30, t: 50, b: 50 },
-      hovermode: 'closest',
-      shapes: [
-        // Central mass/singularity representation
-        {
-          type: 'circle',
-          xref: 'x',
-          yref: 'y',
-          x0: -0.1, y0: -0.1, x1: 0.1, y1: 0.1, // Small circle at origin
-          fillcolor: 'black',
-          line: { color: 'black' }
-        }
-      ]
-    };
-
-    // Add event horizon if M is defined
-    const M = currentGeodesicParams?.M;
-    if (typeof M === 'number' && M > 0) {
-        const eventHorizonRadius = 2 * M;
-        layout.shapes.push({
-            type: 'circle',
-            xref: 'x',
-            yref: 'y',
-            x0: -eventHorizonRadius,
-            y0: -eventHorizonRadius,
-            x1: eventHorizonRadius,
-            y1: eventHorizonRadius,
-            line: { color: 'red', width: 2, dash: 'dash' },
-            name: 'Event Horizon (r=2M)', // Note: name doesn't appear directly on shape
-            opacity: 0.7
-        });
-        // Add annotation for event horizon
-        // layout.annotations = layout.annotations || [];
-        // layout.annotations.push({ 
-        //     x: 0, y: eventHorizonRadius, text: 'EH', showarrow: false 
-        // });
-    }
-
-    return layout;
-  };
-
-  // Plotting functions for embedding diagram (z vs r, 3D surface)
-  const getEmbeddingSurfaceData = () => {
-    if (!embeddingResult?.x_surface) return [];
-    return [{
-      x: embeddingResult.x_surface,
-      y: embeddingResult.y_surface,
-      z: embeddingResult.z_surface,
-      type: 'surface',
-      colorscale: 'Viridis', // Example colorscale
-      showscale: false, // Hide color bar
-      contours: {
-          z: { show: true, usecolormap: true, highlightcolor: "#42f462", project: { z: true } } // Add contours
-      }
-    }];
-  };
-
-  const getEmbeddingSurfaceLayout = () => {
-     const M = currentEmbeddingParams?.M;
-     const title = `Flamm's Paraboloid ${M ? `(M=${M})` : ''}`;
-     return {
-          title: title,
-          scene: { // Use scene for 3D plots
-              xaxis: { title: 'X = r cos(φ)' },
-              yaxis: { title: 'Y = r sin(φ)' },
-              zaxis: { title: 'Embedding z(r)' },
-              aspectratio: { x: 1, y: 1, z: 0.4 } // Adjust aspect ratio
-          },
-          margin: { l: 10, r: 10, t: 50, b: 10 }
-     };
-  };
-
-  // Add helpers for 2D Z vs R plot (optional)
-  const getEmbeddingZRData = () => {
-      if (!embeddingResult?.r_values || !embeddingResult?.z_values) return [];
-      return [{
-          x: embeddingResult.r_values,
-          y: embeddingResult.z_values,
-          type: 'scatter',
-          mode: 'lines',
-          name: 'z(r)',
-          marker: { color: 'purple' }
-      }];
-  };
-
-  const getEmbeddingZRLayout = () => {
-      const M = currentEmbeddingParams?.M;
-      const title = `Embedding Function z(r) ${M ? `(M=${M})` : ''}`;
-      return {
-          title: title,
-          xaxis: { title: 'Radial Coordinate (r)' },
-          yaxis: { title: 'Embedding Coordinate z' },
-          margin: { l: 50, r: 30, t: 50, b: 50 },
-          hovermode: 'closest'
-      };
-  };
 
   return (
     <div className="App">
@@ -571,7 +307,7 @@ function App() {
                     /> 
                     <EmbeddingSection 
                         metricDef={metricDef}
-                        currentGeodesicParams={currentGeodesicParams} 
+                        // currentGeodesicParams={currentGeodesicParams} // Only if needed
                         onShowDefinition={handleShowDefinition}
                     />
                 </div>
@@ -635,6 +371,8 @@ function App() {
                  <GeodesicSection 
                     metricDef={metricDef} 
                     onShowDefinition={handleShowDefinition}
+                    // Optional: Pass setter if EmbeddingSection needs updated geodesic params
+                    // onParamsCalculated={setCurrentGeodesicParams} 
                  />
              </section>
          )}
