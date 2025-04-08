@@ -132,16 +132,45 @@ def calculate_all_geometry(metric_input: MetricInput = Body(...)):
         if christoffel_error:
             raise HTTPException(status_code=500, detail=f"Error calculating Christoffel symbols: {christoffel_error}")
         print("[DEBUG] Calculated Christoffel symbols (as list) gamma_list.") # DEBUG
+        # --- !!! ADDED DEBUG: Print gamma_list contents !!! ---
+        try:
+            print(f"[DEBUG] gamma_list (raw): {gamma_list}")
+            is_zero_list = all(all(all(element == sympy.S.Zero for element in row) for row in plane) for plane in gamma_list)
+            print(f"[DEBUG] Is gamma_list all zeros? {is_zero_list}") 
+        except Exception as list_print_err:
+            print(f"[DEBUG] Error printing gamma_list details: {list_print_err}")
+        # --- !!! END ADDED DEBUG !!! ---
         
         # Convert list to Array for Riemann calculation
         gamma_array = Array(gamma_list)
         print("[DEBUG] Converted gamma_list to gamma_array.") # DEBUG
+        # --- !!! ADDED DEBUG: Print gamma_array contents !!! ---
+        try:
+            print(f"[DEBUG] gamma_array type: {type(gamma_array)}")
+            print(f"[DEBUG] gamma_array shape: {gamma_array.shape}")
+            # Correct the check to use sympy.S.Zero
+            is_zero_array = all(element == sympy.S.Zero for element in gamma_array)
+            print(f"[DEBUG] Is gamma_array all zeros? {is_zero_array}") 
+        except Exception as print_err:
+             print(f"[DEBUG] Error printing gamma_array details: {print_err}")
+        # --- !!! END ADDED DEBUG !!! ---
         
-        # Explicitly create a copy before passing to Riemann function
         gamma_array_copy = gamma_array.copy()
         print("[DEBUG] Created gamma_array_copy.") # DEBUG
         
-        riemann = riemann_core.calculate_riemann_tensor(gamma_array_copy, coords) # Pass the copy
+        # --- !!! ADDED DEBUG: Isolate Riemann call !!! ---
+        riemann = None
+        try:
+            print("[DEBUG] Attempting to call calculate_riemann_tensor...")
+            riemann = riemann_core.calculate_riemann_tensor(gamma_array_copy, coords) # Pass the copy
+            print("[DEBUG] Successfully called calculate_riemann_tensor.")
+        except Exception as riemann_err:
+            print(f"[DEBUG] >>> Specific error calling calculate_riemann_tensor: {riemann_err}")
+            print(f"[DEBUG] >>> Error type: {type(riemann_err)}")
+            # Optionally re-raise or handle differently
+            raise riemann_err # Re-raise to be caught by outer block for now
+        # --- !!! END ADDED DEBUG !!! ---
+        
         print("[DEBUG] Calculated Riemann tensor riemann.") # DEBUG
         
         ricci = ricci_core.calculate_ricci_tensor(riemann)

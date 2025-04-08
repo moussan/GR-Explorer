@@ -45,32 +45,70 @@ def calculate_christoffel_symbols(
     christoffel = MutableDenseNDimArray.zeros(n_dim, n_dim, n_dim)
 
     try:
-        # 1. Calculate all partial derivatives of the metric: dg[rho, mu, nu] = d_rho(g_mu_nu)
+        # 1. Calculate derivatives
         for rho in range(n_dim):
+            coord_symbol = coords[rho]
             for mu in range(n_dim):
                 for nu in range(n_dim):
-                    # Check if component is non-zero before differentiating (optional optimization)
-                    if metric[mu, nu] != 0:
-                        derivative = simplify(diff(metric[mu, nu], coords[rho]))
-                        dg[rho, mu, nu] = derivative
-                    # else: dg is already zero
+                    metric_comp = metric[mu, nu]
+                    # If component is zero, derivative is zero
+                    if metric_comp == sympy.S.Zero:
+                        dg[rho, mu, nu] = sympy.S.Zero
+                        continue # Skip to next iteration
+                    
+                    # Check if the component depends on the coordinate being differentiated
+                    if coord_symbol in metric_comp.free_symbols:
+                        # Calculate derivative only if there's dependency
+                        derivative = diff(metric_comp, coord_symbol)
+                        # Only simplify if the derivative is non-zero. 
+                        # If diff correctly returns S.Zero, simplify is not needed.
+                        if derivative != sympy.S.Zero:
+                            print(f"[DEBUG Christoffel] Calculated non-zero derivative for g[{mu},{nu}] w.r.t {coord_symbol}: {derivative}") # DEBUG
+                            dg[rho, mu, nu] = simplify(derivative)
+                        else:
+                            dg[rho, mu, nu] = sympy.S.Zero # Assign zero directly if diff resulted in zero
+                    else:
+                        # No dependency, derivative is zero
+                        dg[rho, mu, nu] = sympy.S.Zero
 
-        # 2. Calculate Christoffel symbols using the formula
+        # --- !!! DEBUG Check dg array (Keep for one more test) !!! --- 
+        try:
+            dg_is_zero = all(element == sympy.S.Zero for element in dg)
+            print(f"[DEBUG Christoffel] Is dg array all zeros after calculation? {dg_is_zero}")
+            if not dg_is_zero:
+                 found_non_zero = False
+                 for i in range(n_dim):
+                     for j in range(n_dim):
+                         for k in range(n_dim):
+                             if dg[i,j,k] != sympy.S.Zero:
+                                 print(f"[DEBUG Christoffel] Non-zero dg element dg[{i},{j},{k}] = {dg[i,j,k]} (type: {type(dg[i,j,k])})")
+                                 found_non_zero = True; break
+                         if found_non_zero: break
+                     if found_non_zero: break
+        except Exception as dg_err:
+            print(f"[DEBUG Christoffel] Error checking dg array: {dg_err}")
+        # --- !!! END DEBUG !!! ---
+
+        # 2. Calculate Christoffel symbols
         for lam in range(n_dim):
             for mu in range(n_dim):
                 for nu in range(n_dim):
-                    sum_val = 0
+                    sum_val = sympy.S.Zero # Initialize with SymPy Zero
                     for rho in range(n_dim):
-                        # d_mu(g_rho_nu) + d_nu(g_rho_mu) - d_rho(g_mu_nu)
                         term = dg[mu, rho, nu] + dg[nu, rho, mu] - dg[rho, mu, nu]
-                        if term != 0: # Optimization: only multiply if term is non-zero
+                        # Explicitly compare term and metric component with sympy.S.Zero
+                        if term != sympy.S.Zero and inverse_metric[lam, rho] != sympy.S.Zero:
                             sum_val += inverse_metric[lam, rho] * term
                     
-                    if sum_val != 0: # Optimization: only simplify if non-zero
-                         christoffel[lam, mu, nu] = simplify(sympy.Rational(1, 2) * sum_val)
-                    # else: christoffel is already zero
+                    # Explicitly compare sum_val with sympy.S.Zero before simplifying
+                    if sum_val != sympy.S.Zero: 
+                         # Simplify the non-zero sum before assigning
+                         simplified_sum = simplify(sympy.Rational(1, 2) * sum_val)
+                         # Optional: Check if simplification resulted in zero?
+                         # if simplified_sum != sympy.S.Zero:
+                         christoffel[lam, mu, nu] = simplified_sum
+                    # else: christoffel remains 0
                     
-        # Convert the final result to a nested list before returning
         christoffel_list = christoffel.tolist()
         return christoffel_list, None 
 
