@@ -1,30 +1,63 @@
-version: '3.8'
+version: '3.9'
 
 services:
   backend:
     build: ./backend
-    ports:
-      - "5000:5000" # Expose backend API port
-    volumes:
-      - ./backend/app:/app/app # Mount backend code for development
-      - ./data:/app/data      # Mount data volume for persistence
-    environment:
-      # Add any necessary environment variables here
-      PYTHONUNBUFFERED: 1 # Recommended for Docker logging
     container_name: gr_explorer_backend
+    restart: always
+    ports:
+      - "8000:8000"
+      - "5000:5000"  # For test environment
+    volumes:
+      - type: bind
+        source: ./backend/app
+        target: /app/app
+      - type: bind
+        source: ./backend/tests
+        target: /app/tests
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@db:5432/gr_explorer
+      - SECRET_KEY=${SECRET_KEY}
+      - ENVIRONMENT=development
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15
+    container_name: gr_explorer_db
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=gr_explorer
+    volumes:
+      - type: volume
+        source: postgres_data
+        target: /var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   frontend:
     build: ./frontend
+    container_name: gr_explorer_frontend
+    restart: always
     ports:
-      - "3000:3000" # Expose frontend dev server port
+      - "3000:3000"
     volumes:
-      - ./frontend/src:/app/src       # Mount frontend source for development
-      - ./frontend/public:/app/public # Mount public assets
+      - type: bind
+        source: ./frontend
+        target: /app
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
     depends_on:
       - backend
-    container_name: gr_explorer_frontend
-    stdin_open: true # Keep container running for React dev server
-    tty: true        # Keep container running for React dev server
 
 volumes:
-  data: # Define the named volume (though we mount a local dir above) 
+  postgres_data: 

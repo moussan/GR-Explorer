@@ -1,5 +1,10 @@
 import sympy
 from sympy import Matrix, Symbol, Expr, simplify, symbols
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Import necessary functions if running standalone for testing
 # from .metric import DEFAULT_COORDS, create_metric_tensor, calculate_inverse_metric
@@ -31,18 +36,25 @@ def calculate_einstein_tensor(
     if not isinstance(ricci_tensor, Matrix) or ricci_tensor.shape != (4, 4):
         raise ValueError("Ricci tensor must be a 4x4 SymPy Matrix.")
     if not isinstance(ricci_scalar, (sympy.Expr, sympy.Number)):
-         # Allow for number type in case scalar simplifies to a constant
         raise ValueError("Ricci scalar must be a SymPy Expression or Number.")
     if not isinstance(metric, Matrix) or metric.shape != (4, 4):
         raise ValueError("Metric must be a 4x4 SymPy Matrix.")
 
-    # Calculate the Einstein tensor using the formula
-    einstein_tensor = ricci_tensor - (sympy.Rational(1, 2) * metric * ricci_scalar)
+    try:
+        # Calculate the Einstein tensor using the formula
+        einstein_tensor = ricci_tensor - (sympy.Rational(1, 2) * metric * ricci_scalar)
+        
+        # Simplify each component
+        for i in range(4):
+            for j in range(4):
+                einstein_tensor[i, j] = simplify(einstein_tensor[i, j])
 
-    # Apply simplification to all components (can be slow)
-    # einstein_tensor = einstein_tensor.applyfunc(simplify)
+        return einstein_tensor
 
-    return einstein_tensor
+    except Exception as e:
+        error_message = f"Error calculating Einstein tensor: {str(e)}"
+        logger.error(error_message)
+        raise ValueError(error_message)
 
 # Example Usage (requires imports from other core modules)
 if __name__ == '__main__':
@@ -65,29 +77,28 @@ if __name__ == '__main__':
 
         g = create_metric_tensor(schwarzschild_components, DEFAULT_COORDS)
         g_inv = calculate_inverse_metric(g)
-        gamma = calculate_christoffel_symbols(g, g_inv, DEFAULT_COORDS)
+        gamma, error = calculate_christoffel_symbols(g, g_inv, DEFAULT_COORDS)
+
+        if gamma is None:
+            raise ValueError(f"Failed to calculate Christoffel symbols: {error}")
+
         riemann = calculate_riemann_tensor(gamma, DEFAULT_COORDS)
         ricci = calculate_ricci_tensor(riemann)
         scalar_R = calculate_ricci_scalar(ricci, g_inv)
 
-        # Simplify Ricci components before calculating Einstein tensor for this example
-        ricci_simplified = ricci.applyfunc(simplify)
-        scalar_R_simplified = simplify(scalar_R)
-
-        print("Calculating Einstein Tensor for Schwarzschild metric...")
-        einstein = calculate_einstein_tensor(ricci_simplified, scalar_R_simplified, g)
+        logger.info("Calculating Einstein Tensor for Schwarzschild metric...")
+        einstein = calculate_einstein_tensor(ricci, scalar_R, g)
         
-        print("Einstein Tensor G_munu:")
-        # Simplify final result for display
-        sympy.pprint(einstein.applyfunc(simplify))
+        logger.info("Einstein Tensor G_munu:")
+        sympy.pprint(einstein)
 
         # Verify result for vacuum solution
         assert simplify(einstein) == Matrix.zeros(4,4), "Einstein tensor should be 0 for Schwarzschild (vacuum)"
-        print("\nVerified: Einstein tensor is zero for Schwarzschild metric.")
+        logger.info("\nVerified: Einstein tensor is zero for Schwarzschild metric.")
 
     except ImportError:
-        print("Could not import from core modules. Ensure they are accessible.")
+        logger.error("Could not import from core modules. Ensure they are accessible.")
     except ValueError as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}") 
+        logger.error(f"An unexpected error occurred: {e}") 

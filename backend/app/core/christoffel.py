@@ -2,6 +2,11 @@ import sympy
 from sympy import Matrix, Array, zeros, simplify, diff, N, Symbol
 from sympy.tensor.array import MutableDenseNDimArray
 from typing import List, Tuple, Any
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Import coordinate symbols and metric functions if needed for examples/tests
 # from .metric import DEFAULT_COORDS, create_metric_tensor, calculate_inverse_metric
@@ -34,7 +39,6 @@ def calculate_christoffel_symbols(
     if not isinstance(metric, Matrix) or metric.shape != (4, 4):
         raise ValueError("Metric must be a 4x4 SymPy Matrix.")
     if not isinstance(inverse_metric, Matrix) or inverse_metric.shape != (4, 4):
-        # Add logging here if needed: print(f"Invalid inverse metric type: {type(inverse_metric)}")
         raise ValueError("Inverse metric must be a 4x4 SymPy Matrix.")
     if len(coords) != 4:
         raise ValueError("Must provide 4 coordinate symbols.")
@@ -54,73 +58,42 @@ def calculate_christoffel_symbols(
                     # If component is zero, derivative is zero
                     if metric_comp == sympy.S.Zero:
                         dg[rho, mu, nu] = sympy.S.Zero
-                        continue # Skip to next iteration
+                        continue
                     
                     # Check if the component depends on the coordinate being differentiated
                     if coord_symbol in metric_comp.free_symbols:
                         # Calculate derivative only if there's dependency
                         derivative = diff(metric_comp, coord_symbol)
-                        # Only simplify if the derivative is non-zero. 
-                        # If diff correctly returns S.Zero, simplify is not needed.
                         if derivative != sympy.S.Zero:
-                            print(f"[DEBUG Christoffel] Calculated non-zero derivative for g[{mu},{nu}] w.r.t {coord_symbol}: {derivative}") # DEBUG
                             dg[rho, mu, nu] = simplify(derivative)
                         else:
-                            dg[rho, mu, nu] = sympy.S.Zero # Assign zero directly if diff resulted in zero
+                            dg[rho, mu, nu] = sympy.S.Zero
                     else:
-                        # No dependency, derivative is zero
                         dg[rho, mu, nu] = sympy.S.Zero
-
-        # --- !!! DEBUG Check dg array (Keep for one more test) !!! --- 
-        try:
-            dg_is_zero = all(element == sympy.S.Zero for element in dg)
-            print(f"[DEBUG Christoffel] Is dg array all zeros after calculation? {dg_is_zero}")
-            if not dg_is_zero:
-                 found_non_zero = False
-                 for i in range(n_dim):
-                     for j in range(n_dim):
-                         for k in range(n_dim):
-                             if dg[i,j,k] != sympy.S.Zero:
-                                 print(f"[DEBUG Christoffel] Non-zero dg element dg[{i},{j},{k}] = {dg[i,j,k]} (type: {type(dg[i,j,k])})")
-                                 found_non_zero = True; break
-                         if found_non_zero: break
-                     if found_non_zero: break
-        except Exception as dg_err:
-            print(f"[DEBUG Christoffel] Error checking dg array: {dg_err}")
-        # --- !!! END DEBUG !!! ---
 
         # 2. Calculate Christoffel symbols
         for lam in range(n_dim):
             for mu in range(n_dim):
                 for nu in range(n_dim):
-                    sum_val = sympy.S.Zero # Initialize with SymPy Zero
+                    sum_val = sympy.S.Zero
                     for rho in range(n_dim):
                         term = dg[mu, rho, nu] + dg[nu, rho, mu] - dg[rho, mu, nu]
-                        # Explicitly compare term and metric component with sympy.S.Zero
                         if term != sympy.S.Zero and inverse_metric[lam, rho] != sympy.S.Zero:
                             sum_val += inverse_metric[lam, rho] * term
                     
-                    # Explicitly compare sum_val with sympy.S.Zero before simplifying
-                    if sum_val != sympy.S.Zero: 
-                         # Simplify the non-zero sum before assigning
-                         simplified_sum = simplify(sympy.Rational(1, 2) * sum_val)
-                         # Optional: Check if simplification resulted in zero?
-                         # if simplified_sum != sympy.S.Zero:
-                         christoffel[lam, mu, nu] = simplified_sum
-                    # else: christoffel remains 0
+                    if sum_val != sympy.S.Zero:
+                        christoffel[lam, mu, nu] = simplify(sympy.Rational(1, 2) * sum_val)
                     
         christoffel_list = christoffel.tolist()
-        return christoffel_list, None 
+        return christoffel_list, None
 
     except Exception as e:
-        error_message = f"Error calculating Christoffel symbols: {e}"
-        print(error_message) # Or use proper logging
+        error_message = f"Error calculating Christoffel symbols: {str(e)}"
+        logger.error(error_message)
         return None, error_message
 
 # Example Usage (requires importing from metric.py)
 if __name__ == '__main__':
-    # Need to adjust imports if running this file directly
-    # Assuming metric.py is in the same directory for standalone testing:
     try:
         from metric import DEFAULT_COORDS, create_metric_tensor, calculate_inverse_metric
         
@@ -137,27 +110,25 @@ if __name__ == '__main__':
         g = create_metric_tensor(schwarzschild_components, DEFAULT_COORDS)
         g_inv = calculate_inverse_metric(g)
 
-        print("Calculating Christoffel Symbols for Schwarzschild metric...")
+        logger.info("Calculating Christoffel Symbols for Schwarzschild metric...")
         gamma, error = calculate_christoffel_symbols(g, g_inv, DEFAULT_COORDS)
 
         if gamma is not None:
-            print("\nNon-zero Christoffel Symbols (Gamma^lambda_mu_nu):")
+            logger.info("\nNon-zero Christoffel Symbols (Gamma^lambda_mu_nu):")
             count = 0
             for lam in range(4):
                 for mu in range(4):
                     for nu in range(4):
-                        # Simplify here for cleaner output display
                         term = simplify(gamma[lam][mu][nu]) 
                         if term != 0:
                             count += 1
-                            print(f"Gamma^{DEFAULT_COORDS[lam]}_({DEFAULT_COORDS[mu]},{DEFAULT_COORDS[nu]}) = {term}")
-                            # sympy.pprint(term, use_unicode=True)
+                            logger.info(f"Gamma^{DEFAULT_COORDS[lam]}_({DEFAULT_COORDS[mu]},{DEFAULT_COORDS[nu]}) = {term}")
             if count == 0:
-                print("All Christoffel symbols are zero.")
+                logger.info("All Christoffel symbols are zero.")
         else:
-            print(f"Error: {error}")
+            logger.error(f"Error: {error}")
 
     except ImportError:
-        print("Could not import from metric.py. Run this as part of the main application or ensure metric.py is accessible.")
+        logger.error("Could not import from metric.py. Run this as part of the main application or ensure metric.py is accessible.")
     except ValueError as e:
-        print(f"An error occurred: {e}") 
+        logger.error(f"An error occurred: {e}") 
