@@ -1,11 +1,6 @@
 import sympy
 from sympy import Array, Matrix, Symbol, diff, symbols, simplify
 from typing import List
-import logging
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # Import necessary functions if running standalone for testing
 # from .metric import DEFAULT_COORDS, create_metric_tensor, calculate_inverse_metric
@@ -44,48 +39,48 @@ def calculate_riemann_tensor(
     n = len(coords) # Dimension (should be 4)
     riemann = Array.zeros(n, n, n, n) # Initialize R^rho_sigma_mu_nu
 
-    try:
-        # Pre-calculate derivatives of Christoffel symbols: dGamma[mu, rho, nu, sigma] = d_mu(Gamma^rho_nu_sigma)
-        dGamma = Array.zeros(n, n, n, n)
-        for mu in range(n):
-            for rho in range(n):
-                for nu in range(n):
-                    for sigma in range(n):
-                        if christoffel[rho, nu, sigma] != 0:
-                            dGamma[mu, rho, nu, sigma] = simplify(diff(christoffel[rho, nu, sigma], coords[mu]))
-                        else:
-                            dGamma[mu, rho, nu, sigma] = 0
-
-        # Calculate Riemann tensor components
+    # Pre-calculate derivatives of Christoffel symbols: dGamma[mu, rho, nu, sigma] = d_mu(Gamma^rho_nu_sigma)
+    # Note the index order might differ from formula notation depending on loop structure
+    dGamma = Array.zeros(n, n, n, n)
+    for mu in range(n):
         for rho in range(n):
-            for sigma in range(n):
-                for mu in range(n):
-                    for nu in range(n):
-                        # Derivative terms
-                        term1 = dGamma[mu, rho, nu, sigma]  # d_mu(Gamma^rho_nu_sigma)
-                        term2 = dGamma[nu, rho, mu, sigma]  # d_nu(Gamma^rho_mu_sigma)
-                        
-                        # Product terms (sum over lambda)
-                        term3 = 0
-                        term4 = 0
-                        for lam in range(n):
-                            term3 += christoffel[rho, mu, lam] * christoffel[lam, nu, sigma]
-                            term4 += christoffel[rho, nu, lam] * christoffel[lam, mu, sigma]
+            for nu in range(n):
+                for sigma in range(n):
+                    # Need to check if christoffel component is non-zero or non-constant before differentiating
+                    if christoffel[rho, nu, sigma] != 0:
+                       dGamma[mu, rho, nu, sigma] = simplify(diff(christoffel[rho, nu, sigma], coords[mu]))
+                    else:
+                       dGamma[mu, rho, nu, sigma] = 0
 
-                        # Combine terms and simplify
-                        riemann_component = simplify(term1 - term2 + term3 - term4)
-                        riemann[rho, sigma, mu, nu] = riemann_component
+    # Calculate Riemann tensor components
+    for rho in range(n):
+        for sigma in range(n):
+            for mu in range(n):
+                for nu in range(n):
+                    # Derivative terms
+                    term1 = dGamma[mu, rho, nu, sigma]  # d_mu(Gamma^rho_nu_sigma)
+                    term2 = dGamma[nu, rho, mu, sigma]  # d_nu(Gamma^rho_mu_sigma)
+                    
+                    # Product terms (sum over lambda)
+                    term3 = 0
+                    term4 = 0
+                    for lam in range(n):
+                        term3 += christoffel[rho, mu, lam] * christoffel[lam, nu, sigma]
+                        term4 += christoffel[rho, nu, lam] * christoffel[lam, mu, sigma]
 
-        return riemann
+                    # Combine terms
+                    riemann_component = term1 - term2 + term3 - term4
+                    riemann[rho, sigma, mu, nu] = riemann_component # Simplify later if needed
 
-    except Exception as e:
-        error_message = f"Error calculating Riemann tensor: {str(e)}"
-        logger.error(error_message)
-        raise ValueError(error_message)
+    # Apply simplification to all components at the end (can be very slow)
+    # riemann = riemann.applyfunc(simplify)
 
-# Example Usage (requires imports from other core modules)
+    return riemann
+
+# Example Usage (requires imports from metric.py and christoffel.py)
 if __name__ == '__main__':
     try:
+        # Adjust imports based on how you run this
         from metric import DEFAULT_COORDS, create_metric_tensor, calculate_inverse_metric
         from christoffel import calculate_christoffel_symbols
 
@@ -101,33 +96,34 @@ if __name__ == '__main__':
 
         g = create_metric_tensor(schwarzschild_components, DEFAULT_COORDS)
         g_inv = calculate_inverse_metric(g)
-        gamma, error = calculate_christoffel_symbols(g, g_inv, DEFAULT_COORDS)
+        gamma = calculate_christoffel_symbols(g, g_inv, DEFAULT_COORDS)
 
-        if gamma is None:
-            raise ValueError(f"Failed to calculate Christoffel symbols: {error}")
+        print("Calculating Riemann Tensor for Schwarzschild metric...")
+        # This calculation can be very time-consuming!
+        riemann_tensor = calculate_riemann_tensor(gamma, DEFAULT_COORDS)
 
-        logger.info("Calculating Riemann Tensor for Schwarzschild metric...")
-        riemann_tensor = calculate_riemann_tensor(Array(gamma), DEFAULT_COORDS)
-
-        logger.info("\nNon-zero Riemann Tensor Components (R^rho_sigma_mu_nu):")
+        print("\nNon-zero Riemann Tensor Components (R^rho_sigma_mu_nu):")
         count = 0
         for rho in range(4):
             for sigma in range(4):
                 for mu in range(4):
                     for nu in range(4):
-                        term = riemann_tensor[rho, sigma, mu, nu]
+                        # Simplify here for display
+                        term = simplify(riemann_tensor[rho, sigma, mu, nu])
                         if term != 0:
                             count += 1
-                            logger.info(f"R^{DEFAULT_COORDS[rho]}_{{{DEFAULT_COORDS[sigma]},{DEFAULT_COORDS[mu]},{DEFAULT_COORDS[nu]}}} = {term}")
+                            print(f"R^{DEFAULT_COORDS[rho]}_{{{DEFAULT_COORDS[sigma]},{DEFAULT_COORDS[mu]},{DEFAULT_COORDS[nu]}}} = {term}")
         
         if count == 0:
-            logger.info("All Riemann tensor components are zero.")
+             print("All Riemann tensor components are zero (or calculation failed/simplified to zero).")
         else:
-            logger.info(f"\nFound {count} non-zero components.")
+            print(f"\nFound {count} non-zero components (before potential further simplification).")
+            # Note: Schwarzschild is Ricci-flat (R_munu = 0), but Riemann tensor is not zero.
 
     except ImportError:
-        logger.error("Could not import from metric.py or christoffel.py. Ensure they are accessible.")
+        print("Could not import from metric.py or christoffel.py. Ensure they are accessible.")
     except ValueError as e:
-        logger.error(f"An error occurred: {e}")
+        print(f"An error occurred: {e}")
     except Exception as e:
-        logger.error(f"An unexpected error occurred during calculation: {e}") 
+        # Catch other potential errors during complex calculations
+        print(f"An unexpected error occurred during calculation: {e}") 

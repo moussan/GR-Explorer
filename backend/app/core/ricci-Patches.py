@@ -1,6 +1,11 @@
 import sympy
 from sympy import Array, Matrix, Symbol, simplify, symbols, trace
 from typing import List
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Import necessary functions if running standalone for testing
 # from .metric import DEFAULT_COORDS, create_metric_tensor, calculate_inverse_metric
@@ -29,17 +34,20 @@ def calculate_ricci_tensor(riemann_tensor: Array) -> Matrix:
     n = riemann_tensor.shape[0]
     ricci_tensor = Matrix.zeros(n, n)
 
-    for mu in range(n):
-        for nu in range(n):
-            sum_val = 0
-            for rho in range(n):
-                sum_val += riemann_tensor[rho, mu, rho, nu] # Contract first and third indices
-            ricci_tensor[mu, nu] = sum_val # Simplify later if needed
+    try:
+        for mu in range(n):
+            for nu in range(n):
+                sum_val = 0
+                for rho in range(n):
+                    sum_val += riemann_tensor[rho, mu, rho, nu] # Contract first and third indices
+                ricci_tensor[mu, nu] = simplify(sum_val)
 
-    # Apply simplification to all components at the end (can be slow)
-    # ricci_tensor = ricci_tensor.applyfunc(simplify)
+        return ricci_tensor
 
-    return ricci_tensor
+    except Exception as e:
+        error_message = f"Error calculating Ricci tensor: {str(e)}"
+        logger.error(error_message)
+        raise ValueError(error_message)
 
 def calculate_ricci_scalar(ricci_tensor: Matrix, inverse_metric: Matrix) -> sympy.Expr:
     """
@@ -62,18 +70,19 @@ def calculate_ricci_scalar(ricci_tensor: Matrix, inverse_metric: Matrix) -> symp
     if not isinstance(inverse_metric, Matrix) or inverse_metric.shape != (4, 4):
         raise ValueError("Inverse metric must be a 4x4 SymPy Matrix.")
 
-    # Calculate the trace of the product of the inverse metric and the Ricci tensor
-    # R = g^munu * R_munu = Trace(g_inv * R)
-    # Ensure correct multiplication order if needed, but element-wise sum works directly:
-    ricci_scalar = 0
-    for mu in range(inverse_metric.shape[0]):
-        for nu in range(inverse_metric.shape[1]):
-            ricci_scalar += inverse_metric[mu, nu] * ricci_tensor[mu, nu]
+    try:
+        # Calculate the trace of the product of the inverse metric and the Ricci tensor
+        ricci_scalar = 0
+        for mu in range(inverse_metric.shape[0]):
+            for nu in range(inverse_metric.shape[1]):
+                ricci_scalar += inverse_metric[mu, nu] * ricci_tensor[mu, nu]
             
-    # Apply simplification
-    # ricci_scalar = simplify(ricci_scalar)
-    
-    return ricci_scalar
+        return simplify(ricci_scalar)
+
+    except Exception as e:
+        error_message = f"Error calculating Ricci scalar: {str(e)}"
+        logger.error(error_message)
+        raise ValueError(error_message)
 
 # Example Usage (requires imports from other core modules)
 if __name__ == '__main__':
@@ -95,27 +104,30 @@ if __name__ == '__main__':
 
         g = create_metric_tensor(schwarzschild_components, DEFAULT_COORDS)
         g_inv = calculate_inverse_metric(g)
-        gamma = calculate_christoffel_symbols(g, g_inv, DEFAULT_COORDS)
-        riemann = calculate_riemann_tensor(gamma, DEFAULT_COORDS)
+        gamma, error = calculate_christoffel_symbols(g, g_inv, DEFAULT_COORDS)
 
-        print("Calculating Ricci Tensor for Schwarzschild metric...")
+        if gamma is None:
+            raise ValueError(f"Failed to calculate Christoffel symbols: {error}")
+
+        riemann = calculate_riemann_tensor(Array(gamma), DEFAULT_COORDS)
+
+        logger.info("Calculating Ricci Tensor for Schwarzschild metric...")
         ricci = calculate_ricci_tensor(riemann)
-        print("Ricci Tensor R_munu:")
-        # Simplify for display
-        sympy.pprint(ricci.applyfunc(simplify))
+        logger.info("Ricci Tensor R_munu:")
+        sympy.pprint(ricci)
 
-        print("\nCalculating Ricci Scalar for Schwarzschild metric...")
+        logger.info("\nCalculating Ricci Scalar for Schwarzschild metric...")
         scalar_R = calculate_ricci_scalar(ricci, g_inv)
-        print(f"Ricci Scalar R = {simplify(scalar_R)}")
+        logger.info(f"Ricci Scalar R = {scalar_R}")
         
         # Verify Schwarzschild is Ricci flat
         assert simplify(scalar_R) == 0, "Ricci scalar should be 0 for Schwarzschild"
         assert simplify(ricci) == Matrix.zeros(4, 4), "Ricci tensor should be 0 for Schwarzschild"
-        print("\nVerified: Schwarzschild metric is Ricci-flat (R_munu = 0, R = 0).")
+        logger.info("\nVerified: Schwarzschild metric is Ricci-flat (R_munu = 0, R = 0).")
 
     except ImportError:
-        print("Could not import from metric.py, christoffel.py, or riemann.py. Ensure they are accessible.")
+        logger.error("Could not import from metric.py, christoffel.py, or riemann.py. Ensure they are accessible.")
     except ValueError as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}") 
+        logger.error(f"An unexpected error occurred: {e}") 

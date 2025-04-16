@@ -1,23 +1,34 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-# Import the API router
-from .api import endpoints
+from app.api.v1.endpoints import calculations
+from app.db.database import engine, Base
+
+# Create database tables
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="GR Explorer Backend API",
-    description="API for performing General Relativity calculations and managing scenarios.",
-    version="0.1.0",
-    # Add root path if deploying behind a proxy with a specific prefix
-    # root_path="/api/v1" 
+    title="GR Explorer API",
+    description="API for General Relativity calculations and exploration",
+    version="0.1.0"
 )
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
+# Include routers
+app.include_router(calculations.router, prefix="/api/v1/calculations", tags=["calculations"])
 
 @app.get("/", tags=["General"])
 def read_root():
     """Root endpoint, provides a simple welcome message."""
     return {"message": "Welcome to the GR Explorer Backend!"}
-
-# Include the calculation and verification endpoints
-app.include_router(endpoints.router, prefix="/api", tags=["API"])
 
 # Placeholder for future scenario management API
 # from .api import scenarios
